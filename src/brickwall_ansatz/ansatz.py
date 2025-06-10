@@ -1,4 +1,5 @@
 import numpy as np
+import qiskit
 from utils import (
 	applyG_tensor, applyG_block_tensor,
 	partial_trace_keep, antisymm_to_real, antisymm, I2, X, Y, Z,
@@ -62,5 +63,33 @@ def ansatz_grad_vector(Vlist, L, cU, perms, flatten=True, unprojected=False):
             antisymm_to_real(antisymm(Vlist[j].conj().T @ grad[j]))
             for j in range(len(grad))
         ])
+
+
+def construct_ccU(L, eta, Vs, Xlists_opt, perms, perms_qc):
+    nlayers = len(Vs)
+    qc = qiskit.QuantumCircuit(L+1)
+    qc.x(L)
+    for i, V in enumerate(Vs):
+        layer = i
+        if i in range(0, nlayers, eta+1):
+            Glist = Xlists_opt[i]
+            qc_3 = qiskit.QuantumCircuit(3)
+            for j, G in enumerate(Glist):
+                qc_3.unitary( G, (3-1-perms_qc[j][1], 3-1-perms_qc[j][0]))  
+
+            for j in range(L//2):
+                if perms[layer] is not None:
+                    qc.append(qc_3.to_gate(), [L-perms[layer][2*j+1]-1, L-perms[layer][2*j]-1, L])
+                else:
+                    qc.append(qc_3.to_gate(), [L-(2*j+1)-1, L-(2*j)-1, L])
+            
+        else:
+            for j in range(L//2):
+                if perms[layer] is not None:
+                    qc.unitary(V, [L-perms[layer][2*j]-1, L-perms[layer][2*j+1]-1])
+                else:
+                    qc.unitary(V, [L-2*j-1, L-(2*j+1)-1])
+    qc.x(L)
+    return qc
 
 
