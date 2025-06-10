@@ -1,1 +1,1 @@
-![](https://github.com/erenaykrcn/ccU/blob/main/examples/heisenberg1d/fig.png "Riemannian Circuit Optimization for Controlled Time Evolution Operator")
+![](https://github.com/erenaykrcn/ccU/blob/main/examples/heisenberg1d/fig3.png "Riemannian Circuit Optimization for Controlled Time Evolution Operator")
