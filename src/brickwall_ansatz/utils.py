@@ -15,6 +15,7 @@ def get_params(eta, gamma):
     """
         Helper function to retrive the Trotter coefficients for the starting 
         point, depending on the number of controlling layers (gamma.)
+        This one is for Heisenberg 000 model.
     """
     
     eta_coeffs_dict = {2: [1, 1], 3: [0.5, 1, 0.5], 4: [0.5, 0.5, 0.5, 0.5], 5:[0.25, 0.5, 0.5, 0.5, 0.25]}
@@ -35,6 +36,29 @@ def get_params(eta, gamma):
     }
 
     return eta_coeffs_dict[eta], gamma_coeffs_dict[gamma], gamma_indices_dict[gamma], W_dict[(eta%2, gamma)]
+
+
+def get_params_heis111(eta, gamma):
+    """
+        Helper function to retrive the Trotter coefficients for the starting 
+        point, depending on the number of controlling layers (gamma.)
+        This one is for Heisenberg 111 model.
+    """
+    
+    eta_coeffs_dict = {2: [1, 1], 3: [0.5, 1, 0.5], 4: [0.5, 0.5, 0.5, 0.5], 5:[0.25, 0.5, 0.5, 0.5, 0.25]}
+    gamma_coeffs_dict = {2: [1, 1], 3: [1, 1, 1], 4: [0.5, 1, 1, 0.5], 5: [0.5, 0.5, 1, 0.5, 0.5], 6: [0.5, 0.5, 1, 0.5, 0.5]}
+    gamma_indices_dict = {2: [0, 1], 3: [0,1,2], 4: [0, 1, 2, 0], 5: [0, 1, 2, 1, 0], 6: [0, 1, 2, 1, 0]}
+    
+    W_dict = {
+              (0, 5): [np.kron(X,  Z), np.kron(Z@Y, I2), np.kron(X@Z, I2), np.kron(I2, Z@X),
+                        np.kron(I2, Y@Z), np.kron(Z, X)],
+              
+              (1, 3): [np.kron(X, Z), np.kron(I2,  Z@Y), np.kron(X@Z, I2), np.kron(Z, Y)],
+              (0, 3): [np.kron(X,  Z), np.kron(Z@Y, I2), np.kron(X@Z, I2), np.kron(Y, Z)],
+    }
+
+    return eta_coeffs_dict[eta], gamma_coeffs_dict[gamma], gamma_indices_dict[gamma], W_dict[(eta%2, gamma)]
+
 
 
 def applyG_tensor(G, U_tensor, k, l):

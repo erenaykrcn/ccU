@@ -78,16 +78,11 @@ def construct_ccU(L, eta, Vs, Xlists_opt, perms, perms_qc):
                 qc_3.unitary( G, (3-1-perms_qc[j][1], 3-1-perms_qc[j][0]))  
 
             for j in range(L//2):
-                if perms[layer] is not None:
-                    qc.append(qc_3.to_gate(), [L-perms[layer][2*j+1]-1, L-perms[layer][2*j]-1, L])
-                else:
-                    qc.append(qc_3.to_gate(), [L-(2*j+1)-1, L-(2*j)-1, L])
+                qc.append(qc_3.to_gate(), [L-perms[layer][2*j]-1, L-perms[layer][2*j+1]-1, L])
+
         else:
             for j in range(L//2):
-                if perms[layer] is not None:
-                    qc.unitary(V, [L-perms[layer][2*j]-1, L-perms[layer][2*j+1]-1])
-                else:
-                    qc.unitary(V, [L-2*j-1, L-(2*j+1)-1])
+                qc.unitary(V, [L-perms[layer][2*j]-1, L-perms[layer][2*j+1]-1])
     qc.x(L)
     return qc
 
