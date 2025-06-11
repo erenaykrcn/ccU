@@ -82,7 +82,6 @@ def construct_ccU(L, eta, Vs, Xlists_opt, perms, perms_qc):
                     qc.append(qc_3.to_gate(), [L-perms[layer][2*j+1]-1, L-perms[layer][2*j]-1, L])
                 else:
                     qc.append(qc_3.to_gate(), [L-(2*j+1)-1, L-(2*j)-1, L])
-            
         else:
             for j in range(L//2):
                 if perms[layer] is not None:
