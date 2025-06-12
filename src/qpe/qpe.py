@@ -13,7 +13,7 @@ import rqcopt as oc
 
 def estimate_phases(L, prepared_state, eigenvalues_sort, t, tau,
     shots, depolarizing_error, qc_cU, return_counts=False, mid_cbits=0, 
-    noise_model=None, get_cx=False, qasm=False,
+    noise_model=None, get_cx=False, qasm=False, init_state=None,
     delta_tau=None
     ):
     backend = qiskit.Aer.get_backend("aer_simulator")
@@ -21,11 +21,9 @@ def estimate_phases(L, prepared_state, eigenvalues_sort, t, tau,
     if noise_model is None:
         x1_error = errors.depolarizing_error(depolarizing_error*0.1, 1)
         x2_error = errors.depolarizing_error(depolarizing_error, 2)
-        x3_error = errors.depolarizing_error(depolarizing_error, 3)
         noise_model = NoiseModel()
         noise_model.add_all_qubit_quantum_error(x1_error, ['u1', 'u2', 'u3'])
         noise_model.add_all_qubit_quantum_error(x2_error, ['cu', 'cx','cy', 'cz'])
-        noise_model.add_all_qubit_quantum_error(x3_error, ['ccu', 'ccx','ccy', 'ccz'])
         print(noise_model)
 
     phase_estimates_with_noise = []
@@ -47,8 +45,13 @@ def estimate_phases(L, prepared_state, eigenvalues_sort, t, tau,
         count_ops = dag.count_ops()
 
     print("getting counts")
-    counts_real = execute(transpile(qpe_real), backend, noise_model=noise_model, shots=shots).result().get_counts()
-    counts_imag = execute(transpile(qpe_imag), backend, noise_model=noise_model, shots=shots).result().get_counts()
+    if init_state is None:
+        counts_real = execute(transpile(qpe_real), backend, noise_model=noise_model, shots=shots).result().get_counts()
+        counts_imag = execute(transpile(qpe_imag), backend, noise_model=noise_model, shots=shots).result().get_counts()
+    else:
+        counts_real = execute(transpile(qpe_real), backend, noise_model=noise_model, initial_statevector=init_state, shots=shots).result().get_counts()
+        counts_imag = execute(transpile(qpe_imag), backend, noise_model=noise_model, initial_statevector=init_state, shots=shots).result().get_counts()
+
 
     if return_counts:
         if get_cx:

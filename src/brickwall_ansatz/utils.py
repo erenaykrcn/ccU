@@ -250,8 +250,8 @@ def trotterized_time_evolution(qc, L, hlocs, t, gate, lamb=None):
     
     K_layer = [None for _ in range(L)]
     for j in range(len(perms[0])//2):
-        K_layer[perms[0][2*j]] = gate
-        K_layer[perms[0][2*j+1]] = None
+        K_layer[perms[0][2*j]] = gate[0]
+        K_layer[perms[0][2*j+1]] = gate[1]
         
     K_b = [K_layer, None]
     K_a = [None, K_layer]

@@ -14,7 +14,7 @@ import scipy
 
 
 
-def trotter(tau, L, lamb, hloc):
+def trotter(tau, L, lamb, hloc, dimerized=True):
     """
         This Trotterization slowly enables the 
         second permutation as lamb goes 0 -> 1.
@@ -27,9 +27,8 @@ def trotter(tau, L, lamb, hloc):
     perms1 = [i for i in range(L)]
     perms2 = [i for i in range(1, L)]+[0]
     perm_set = [perms1, perms2]
-    perms = perm_set
 
-    method_start = oc.SplittingMethod.suzuki(len(perms), 1)
+    method_start = oc.SplittingMethod.suzuki(len(perm_set), 1)
     indices = method_start.indices
     coeffs = method_start.coeffs
 
@@ -38,11 +37,18 @@ def trotter(tau, L, lamb, hloc):
     perms = []
     
     for i, c in zip(indices, coeffs):
-        Vlist_start.append(
-            scipy.linalg.expm(-1j*c*tau*hloc *\
-                (lamb if i!=0 else 1))
-        )
+        if dimerized:
+            Vlist_start.append(
+                scipy.linalg.expm(-1j*c*tau*hloc *\
+                    (lamb if i!=0 else 1))
+            )
+        else:
+            Vlist_start.append(
+                scipy.linalg.expm(-1j*c*tau*hloc(lamb))
+            )
         perms.append(perm_set[i])
+
+
     Vlist_gates = []
     for V in Vlist_start:
         qc2 = qiskit.QuantumCircuit(2)
@@ -58,14 +64,15 @@ def trotter(tau, L, lamb, hloc):
 
 
 
-def run_adiabatic(L, T, S, hloc, init_state, return_state=False, eigenvectors_sort=None):
+def run_adiabatic(L, T, S, hloc, init_state,
+     return_state=False, eigenvectors_sort=None, dimerized=True):
     tau = 1/S
     t_s = np.linspace(0, T, S*T)
     sch = lambda t, T: np.sin(np.pi*t/(2*T))**2
     
     qc = qiskit.QuantumCircuit(L)
     for s in range(S*T):
-        qc.append(trotter(tau, L, sch(t_s[s], T), hloc).to_gate(),
+        qc.append(trotter(tau, L, sch(t_s[s], T), hloc, dimerized=dimerized).to_gate(),
                   [i for i in range(L)])
     
     backend = Aer.get_backend("statevector_simulator")
@@ -76,7 +83,9 @@ def run_adiabatic(L, T, S, hloc, init_state, return_state=False, eigenvectors_so
 
     if eigenvectors_sort is not None:
         toPlot = [state_fidelity(final_state, eigenvectors_sort[:, i]) for i in range(10)]
-        print("Resulting Ground State Fidelity: ", np.sum(np.array([toPlot[i] for i in range(1)])))
+        #print("Resulting Ground State Fidelity: ", np.sum(np.array([toPlot[i] for i in range(1)])))
+        
+        print("Resulting Fidelities: ", [toPlot[i] for i in range(10)])
 
     if return_state:
         return qc
@@ -87,3 +96,5 @@ def run_adiabatic(L, T, S, hloc, init_state, return_state=False, eigenvectors_so
         count_ops = dag.count_ops()
         return [state_fidelity(final_state, eigenvectors_sort[:, i]) for i in range(10)], 
         {"gates": count_ops['unitary']}, final_state
+
+
