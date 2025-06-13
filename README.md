@@ -1,4 +1,4 @@
-![](https://github.com/erenaykrcn/ccU/blob/main/examples/heisenberg1d/figs/ccU_tikz-1.png "Riemannian Circuit Optimization for Controlled Time Evolution Operator")
+![Riemannian Circuit Optimization for Controlled Time Evolution Operator](https://github.com/erenaykrcn/ccU/blob/main/examples/heisenberg1d/figs/ccU_tikz-1.png)
 This is my proposal for reducing the overhead of implementing the controlled time evolution operator (controlled-U) by using a Riemannian Trust Region protocol. Controlled-U constitutes the bottleneck for a hardware friendly implementation of Quantum Phase Estimation. Main promise of my proposed algorithm is to enable larger Trotter steps for low approximation errors, enabling a hardware implementation of QPE on non-integrable quantum models up to 16 qubits under realistic hardware noise. Core idea is to run the optimization for translationally invariant Hamiltonians with exactly diagonalizable, small system sizes (e.g. 4 qubits) and employ these same gates on larger systems.
 
 ![](https://github.com/erenaykrcn/ccU/blob/main/examples/heisenberg1d/figs/heisenberg1d_111_trotter_and_cxs.png)
