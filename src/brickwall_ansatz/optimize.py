@@ -13,17 +13,19 @@ def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, **kwar
     # Gamma refers to the number of controlling layers. If controlling layers are
     # inserted, we expect the time evolution direction to be reverted.
     n = len(Vlist_start)
-    U_back = U.conj().T
+    U_back = U.conj().T if gamma>1 else U
     indices = []
     for i in range(gamma):
         indices += list(range(eta*i+1+i, eta*(i+1)+1+i))
 
     # target function
     def f(vlist):
-        f_base = -np.trace(U.conj().T @ ansatz(reduce_list(
-             vlist, gamma, eta), L, reduce_list(perms, gamma, eta))).real -\
-        np.trace(U_back.conj().T @ ansatz(vlist, L, perms)).real
-        
+        if gamma>1:
+            f_base = -np.trace(U.conj().T @ ansatz(reduce_list(
+                 vlist, gamma, eta), L, reduce_list(perms, gamma, eta))).real -\
+            np.trace(U_back.conj().T @ ansatz(vlist, L, perms)).real
+        else:
+            f_base = -np.trace(U.conj().T @ ansatz(vlist, L, perms)).real
 
         if penalty_weight != 0:
             penalty = 0
@@ -37,34 +39,42 @@ def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, **kwar
 
     def gradfunc(vlist):
         gradfunc1 = -ansatz_grad_vector(vlist, L, U_back, perms, flatten=False)
-        gradfunc2 = -ansatz_grad_vector(reduce_list(
-            vlist, gamma, eta), L, U, reduce_list(perms, gamma, eta), flatten=False)
-        for i, index in enumerate(indices):
-            gradfunc1[index] += gradfunc2[i]
+        if gamma>1:
+            gradfunc2 = -ansatz_grad_vector(reduce_list(
+                vlist, gamma, eta), L, U, reduce_list(perms, gamma, eta), flatten=False)
+            for i, index in enumerate(indices):
+                gradfunc1[index] += gradfunc2[i]
 
-        if penalty_weight != 0:
-            # Add penalty gradient
-            for i in range(len(vlist)):
-                if i not in indices:
-                    grad_penalty = grad_separability_penalty(vlist[i])
-                    gradfunc1[i] += penalty_weight * grad_penalty
+            if penalty_weight != 0:
+                # Add penalty gradient
+                for i in range(len(vlist)):
+                    if i not in indices:
+                        grad_penalty = grad_separability_penalty(vlist[i])
+                        gradfunc1[i] += penalty_weight * grad_penalty
 
         return gradfunc1.reshape(-1)
 
     def hessfunc(vlist):
         hessfunc1 = -ansatz_hessian_matrix(vlist, L, U_back, perms, flatten=False)
-        hessfunc2 = -ansatz_hessian_matrix(reduce_list(
-            vlist, gamma, eta), L, U, reduce_list(perms, gamma, eta), flatten=False)
-        for i, index in enumerate(indices):
-            for j, index_ in enumerate(indices):
-                hessfunc1[index, :, index_, :] += hessfunc2[i, :, j, :]
+        if gamma>1:
+            hessfunc2 = -ansatz_hessian_matrix(reduce_list(
+                vlist, gamma, eta), L, U, reduce_list(perms, gamma, eta), flatten=False)
+            for i, index in enumerate(indices):
+                for j, index_ in enumerate(indices):
+                    hessfunc1[index, :, index_, :] += hessfunc2[i, :, j, :]
         return hessfunc1.reshape((n * 16, n * 16))
 
     # quantify error by spectral norm
-    errfunc = lambda vlist: np.linalg.norm(
-        ansatz(reduce_list(
-            vlist, gamma, eta), L, reduce_list(perms, gamma, eta)) - U, ord=2) + np.linalg.norm(
-        ansatz(vlist, L, perms) - U_back, ord=2)
+    def errfunc(vlist): 
+        if gamma>1:
+            return np.linalg.norm(
+            ansatz(reduce_list(
+                vlist, gamma, eta), L, reduce_list(perms, gamma, eta)) - U, ord=2) + np.linalg.norm(
+            ansatz(vlist, L, perms) - U_back, ord=2)
+        else:
+            return np.linalg.norm(
+            ansatz(vlist, L, perms) - U, ord=2)
+
     kwargs["gfunc"] = errfunc
     # perform optimization
     Vlist, f_iter, err_iter = riemannian_trust_region_optimize(
