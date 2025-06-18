@@ -66,6 +66,50 @@ def applyG_block_tensor(G, U_tensor, L, perm):
     return U_tensor
 
 
+
+def applyG_state(G, state, L, k, l):
+    """
+    Applies 2-qubit gate G to qubits k and l of a state vector of length 2^L.
+    """
+    if k > l:
+        k, l = l, k
+        SWAP = np.array([[1, 0, 0, 0],
+                         [0, 0, 1, 0],
+                         [0, 1, 0, 0],
+                         [0, 0, 0, 1]])
+        G = SWAP @ G @ SWAP
+
+    # Reshape state into a tensor of shape (2,)*L
+    state_tensor = state.reshape([2] * L)
+
+    # Transpose to bring qubits k and l to front
+    axes = [k, l] + [i for i in range(L) if i != k and i != l]
+    inv_axes = np.argsort(axes)
+    transposed = np.transpose(state_tensor, axes)
+
+    # Reshape to (4, -1) so we can apply G
+    transposed = transposed.reshape(4, -1)
+    updated = G @ transposed
+
+    # Reshape back
+    updated = updated.reshape([2, 2] + [2] * (L - 2))
+    updated = np.transpose(updated, inv_axes)
+    return updated.reshape(2**L)
+
+
+def applyG_block_state(G, state, L, perm):
+    """
+    Applies 2-qubit gate G to each (k, l) in perm on a 2^L state vector.
+    """
+    assert len(perm) % 2 == 0
+    for j in range(len(perm) // 2):
+        k = perm[2 * j]
+        l = perm[2 * j + 1]
+        state = applyG_state(G, state, L, k, l)
+    return state
+
+
+
 def reduce_list(vlist, gamma, eta):
     if gamma==1:
         return vlist

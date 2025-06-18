@@ -42,7 +42,6 @@ def ansatz_hess_single_layer(V, L, Z, U_tilde_, perm):
 	"""
 	G = np.zeros_like(V, dtype=complex)
 	for i in range(L//2):
-		
 		k, l = (perm[2*i], perm[2*i+1])
 		for z in range(L//2):
 			U_tilde = U_tilde_.copy()

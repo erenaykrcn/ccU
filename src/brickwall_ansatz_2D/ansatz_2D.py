@@ -1,7 +1,7 @@
 import numpy as np
 import qiskit
 from utils_2D import (
-	applyG_tensor, applyG_block_tensor,
+	applyG_tensor, applyG_block_tensor, applyG_block_state,
 	partial_trace_keep, antisymm_to_real, antisymm, I2, X, Y, Z,
 	project_unitary_tangent, real_to_antisymm, partial_trace_keep_tensor
 	)
@@ -108,6 +108,23 @@ def ansatz_2D_grad_vector(Vlist, L, cU, perms, flatten=True, unprojected=False):
             antisymm_to_real(antisymm(Vlist[j].conj().T @ grad[j]))
             for j in range(len(grad))
         ])
+
+
+def ansatz_sparse(Vlist, L, perms, input_state):
+    """
+    Applies sequence of gates specified by Vlist and perms to ground_state.
+    """
+    state = input_state.copy()
+    Vlist_verticals = Vlist[:len(Vlist)//2]
+    Vlist_horizontals = Vlist[len(Vlist)//2:]
+    perms_verticals = perms[:len(perms)//2]
+    perms_horizontals = perms[len(perms)//2:]
+    for i in range(len(Vlist)//2):
+        for j, perm in enumerate(perms_verticals):
+            state = applyG_block_state(Vlist_verticals[i], state, L, perm)
+        for j, perm in enumerate(perms_horizontals):
+            state = applyG_block_state(Vlist_horizontals[i], state, L, perm)
+    return state
 
 
 
