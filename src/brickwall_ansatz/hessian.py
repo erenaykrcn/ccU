@@ -41,9 +41,9 @@ def ansatz_hess_single_layer(V, L, Z, U_tilde_, perm):
 		Computes single permutation hessian for the i==k.
 	"""
 	G = np.zeros_like(V, dtype=complex)
-	for i in range(L//2):
+	for i in range(len(perm)//2):
 		k, l = (perm[2*i], perm[2*i+1])
-		for z in range(L//2):
+		for z in range(len(perm)//2):
 			U_tilde = U_tilde_.copy()
 			if z==i:
 				continue
@@ -55,7 +55,7 @@ def ansatz_hess_single_layer(V, L, Z, U_tilde_, perm):
 				else:
 					U_tilde = applyG_tensor(V, U_tilde, k_, l_)
 
-			for j in list(range(i+1, L//2))[::-1]:
+			for j in list(range(i+1, len(perm)//2))[::-1]:
 				k_, l_ = (perm[2*j], perm[2*j+1])
 				if z==j:
 					U_tilde = applyG_tensor(Z, U_tilde, k_, l_) # Reversed left to right multiplication here!
@@ -76,10 +76,10 @@ def ansatz_hess_single_layer(V, L, Z, U_tilde_, perm):
 def ansatz_grad_directed(V, U_tilde, L, Z, perm):
 	assert V.shape == (4, 4)
 	assert Z.shape == (4, 4)
-	assert L % 2 == 0
+	#assert L % 2 == 0
 
 	G = np.zeros((2**L, 2**L), dtype=complex).reshape([2]*2*L)
-	for i in range(L//2):
+	for i in range(len(perm)//2):
 		U = np.eye(2**L).reshape([2]*2*L)
 		k, l = (perm[2*i], perm[2*i+1])
 
@@ -89,7 +89,7 @@ def ansatz_grad_directed(V, U_tilde, L, Z, perm):
 
 		U = applyG_tensor(Z, U, k, l)
 
-		for j in list(range(i+1, L//2))[::-1]:
+		for j in list(range(i+1, len(perm)//2))[::-1]:
 			k_, l_ = (perm[2*j], perm[2*j+1])
 			U = applyG_tensor(V, U, k_, l_)
 		G += U

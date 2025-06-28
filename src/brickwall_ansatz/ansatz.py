@@ -21,13 +21,13 @@ def ansatz(Vlist, L, perms):
 
 def ansatz_grad(V, L, U_tilde_tensor, perm):
     G = np.zeros_like(V, dtype=complex)
-    for i in range(L // 2):
+    for i in range(len(perm) // 2):
         k, l = perm[2 * i], perm[2 * i + 1]
         U_working = U_tilde_tensor.copy()
         for j in range(i):
             k_, l_ = perm[2 * j], perm[2 * j + 1]
             U_working = applyG_tensor(V, U_working, k_, l_)
-        for j in range(i + 1, L // 2):
+        for j in range(i + 1, len(perm) // 2):
             k_, l_ = perm[2 * j], perm[2 * j + 1]
             U_working = applyG_tensor(V, U_working, k_, l_)
         T = partial_trace_keep(U_working.reshape(2**L, 2**L), [k, l], L)

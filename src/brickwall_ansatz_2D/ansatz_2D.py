@@ -7,24 +7,10 @@ from utils_2D import (
 	)
 
 
-def ansatz_2D(Vlist, L, perms):
-    assert len(Vlist)%2 == 0
-    Vlist_verticals = Vlist[:len(Vlist)//2]
-    Vlist_horizontals = Vlist[len(Vlist)//2:]
-    perms_verticals = perms[:len(perms)//2]
-    perms_horizontals = perms[len(perms)//2:]
-
+def ansatz_2D(Vlist, L, perms, reps=1):
     ret_tensor = np.eye(2**L, dtype=complex).reshape([2]*2*L)
-    """for i, perm in enumerate(perms):
-        ret_tensor = applyG_block_tensor((
-                Vlist_verticals[i//(2*alpha)] if (i//alpha)%2==0 else Vlist_horizontals[i//(2*alpha)]
-            ), ret_tensor, L, perm)"""
-    
-    for i in range(len(Vlist)//2):
-        for j, perm in enumerate(perms_verticals):
-            ret_tensor = applyG_block_tensor(Vlist_verticals[i], ret_tensor, L, perm)
-        for j, perm in enumerate(perms_horizontals):
-            ret_tensor = applyG_block_tensor(Vlist_horizontals[i], ret_tensor, L, perm)
+    for j, perm in enumerate(perms):
+        ret_tensor = applyG_block_tensor(Vlist[j//reps], ret_tensor, L, perm)
     return ret_tensor.reshape(2**L, 2**L)
 
 
@@ -56,45 +42,24 @@ def ansatz_2D_grad(V, L, U_tilde_tensor, perms):
     return G
 
 
-def ansatz_2D_grad_vector(Vlist, L, cU, perms, flatten=True, unprojected=False):
-    assert len(Vlist)%2 == 0
-    grad_verticals = []
-    grad_horizontals = []
-    Vlist_verticals = Vlist[:len(Vlist)//2]
-    Vlist_horizontals = Vlist[len(Vlist)//2:]
-    perms_verticals = perms[:len(perms)//2]
-    perms_horizontals = perms[len(perms)//2:]
+def ansatz_2D_grad_vector(Vlist, L, cU, perms_extended, reps=1, flatten=True, unprojected=False):
+    grad = [None for V in Vlist]
 
-    grads = (grad_verticals, grad_horizontals)
-    Vl = (Vlist_verticals, Vlist_horizontals)
-    perms_l = (perms_verticals, perms_horizontals)
+    for i, V in enumerate(Vlist):
+        U_tilde = np.eye(2**L).reshape([2]*2*L)
+        perms = perms_extended[reps*i:reps*(i+1)]
 
-    for _ in range(2): # 2D
-        for i, V in enumerate(Vl[_]):
-            G = np.zeros_like(V, dtype=complex)
-            U_tilde = np.eye(2**L).reshape([2]*2*L)
-            if _==0:
-                for perm in perms_horizontals:
-                    U_tilde = applyG_block_tensor(Vlist_horizontals[i], U_tilde, L, perm)
-            for j in range(i+1, len(Vl[_])):
-                for perm in perms_verticals:
-                    U_tilde = applyG_block_tensor(Vlist_verticals[j], U_tilde, L, perm)
-                for perm in perms_horizontals:
-                    U_tilde = applyG_block_tensor(Vlist_horizontals[j], U_tilde, L, perm)
-            U_tilde = (cU.conj().T @ U_tilde.reshape(2**L, 2**L)).reshape([2]*2*L)
-            for j in range(i):
-                for perm in perms_verticals:
-                    U_tilde = applyG_block_tensor(Vlist_verticals[j], U_tilde, L, perm)
-                for perm in perms_horizontals:
-                    U_tilde = applyG_block_tensor(Vlist_horizontals[j], U_tilde, L, perm)
-            if _==1:
-                for perm in perms_verticals:
-                    U_tilde = applyG_block_tensor(Vlist_verticals[i], U_tilde, L, perm)
-            
-            grads[_].append(ansatz_2D_grad(V, L, U_tilde, [perm for perm in perms_l[_]]).conj().T)
+        for j in range(i+1, len(Vlist)):
+            perms_j = perms_extended[reps*j:reps*(j+1)]
+            for perm in perms_j:
+                U_tilde = applyG_block_tensor(Vlist[j], U_tilde, L, perm)
+        U_tilde = (cU.conj().T @ U_tilde.reshape(2**L, 2**L)).reshape([2]*2*L)
+        for j in range(i):
+            perms_j = perms_extended[reps*j:reps*(j+1)]
+            for perm in perms_j:
+                U_tilde = applyG_block_tensor(Vlist[j], U_tilde, L, perm)
+        grad[i] = ansatz_2D_grad(V, L, U_tilde, perms).conj().T
 
-
-    grad = grad_verticals+grad_horizontals
     if unprojected:
         return grad
     # Project onto tangent space.
@@ -110,20 +75,13 @@ def ansatz_2D_grad_vector(Vlist, L, cU, perms, flatten=True, unprojected=False):
         ])
 
 
-def ansatz_sparse(Vlist, L, perms, input_state):
+def ansatz_sparse(Vlist, L, perms, input_state, reps=1):
     """
     Applies sequence of gates specified by Vlist and perms to ground_state.
     """
     state = input_state.copy()
-    Vlist_verticals = Vlist[:len(Vlist)//2]
-    Vlist_horizontals = Vlist[len(Vlist)//2:]
-    perms_verticals = perms[:len(perms)//2]
-    perms_horizontals = perms[len(perms)//2:]
-    for i in range(len(Vlist)//2):
-        for j, perm in enumerate(perms_verticals):
-            state = applyG_block_state(Vlist_verticals[i], state, L, perm)
-        for j, perm in enumerate(perms_horizontals):
-            state = applyG_block_state(Vlist_horizontals[i], state, L, perm)
+    for j, perm in enumerate(perms):
+        state = applyG_block_state(Vlist[j//reps], state, L, perm)
     return state
 
 

@@ -110,14 +110,17 @@ def applyG_block_state(G, state, L, perm):
 
 
 
-def reduce_list(vlist, gamma, eta):
-    if gamma==1:
-        return vlist
-    vlist_reduced = []
-    for i in range(gamma):
-        for j in range(eta*i+1+i, eta*(i+1)+1+i):
-            vlist_reduced.append(vlist[j])
-    return vlist_reduced
+def reduce_list(vlist):
+    vlist_vert_reduced = []
+    vlist_horz_reduced = []
+    vlist_vert = vlist[:len(vlist)//2]
+    vlist_horz = vlist[len(vlist)//2:]
+
+    for i in range(1, len(vlist)//2, 2):
+        vlist_vert_reduced += [vlist_vert[i]]
+        vlist_horz_reduced += [vlist_horz[i]]
+    
+    return vlist_vert_reduced + vlist_horz_reduced
 
 
 def partial_trace_keep(U, keep_qubits, N):
