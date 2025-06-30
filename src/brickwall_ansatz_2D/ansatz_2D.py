@@ -15,7 +15,6 @@ def ansatz_2D(Vlist, L, perms):
     return ret_tensor.reshape(2**L, 2**L)
 
 
-
 def ansatz_2D_grad(V, L, U_tilde_tensor, perms):
     G = np.zeros_like(V, dtype=complex)
     for _, perm in enumerate(perms):

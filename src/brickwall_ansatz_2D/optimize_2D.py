@@ -12,7 +12,7 @@ def err(vlist, U, L, perms):
     return f_base
 
 
-def optimize(L, U, Vlist_start, perms, perms_reduced=None, reps=1, control_layers=[], **kwargs):
+def optimize(L, U, Vlist_start, perms, perms_reduced=None, control_layers=[], **kwargs):
     n = len(Vlist_start)
     indices = []
     for i in range(len(Vlist_start)):
@@ -25,10 +25,10 @@ def optimize(L, U, Vlist_start, perms, perms_reduced=None, reps=1, control_layer
             if i not in control_layers:
                 vlist_reduced.append(V)
         if len(control_layers)==0:
-            return -np.trace(U.conj().T @ ansatz_2D(vlist, L, perms, reps=reps)).real
+            return -np.trace(U.conj().T @ ansatz_2D(vlist, L, perms)).real
         else:
-            return -np.trace(U @ ansatz_2D(vlist, L, perms, reps=reps)).real +\
-                -np.trace(U.conj().T @ ansatz_2D(vlist_reduced, L, perms_reduced, reps=reps)).real
+            return -np.trace(U @ ansatz_2D(vlist, L, perms)).real +\
+                -np.trace(U.conj().T @ ansatz_2D(vlist_reduced, L, perms_reduced)).real
 
     def gradfunc(vlist):
         vlist_reduced = []
@@ -36,10 +36,10 @@ def optimize(L, U, Vlist_start, perms, perms_reduced=None, reps=1, control_layer
             if i not in control_layers:
                 vlist_reduced.append(V)
         if len(control_layers)==0:
-            return -ansatz_2D_grad_vector(vlist, L, U, perms, reps=reps)
+            return -ansatz_2D_grad_vector(vlist, L, U, perms)
         else:
-            gradfunc1 = -ansatz_2D_grad_vector(vlist, L, U.conj().T, perms, reps=reps, flatten=False)
-            gradfunc2 = -ansatz_2D_grad_vector(vlist_reduced, L, U, perms_reduced, reps=reps, flatten=False)
+            gradfunc1 = -ansatz_2D_grad_vector(vlist, L, U.conj().T, perms, flatten=False)
+            gradfunc2 = -ansatz_2D_grad_vector(vlist_reduced, L, U, perms_reduced, flatten=False)
             for i, index in enumerate(indices):
                 gradfunc1[index] += gradfunc2[i]
         return gradfunc1.reshape(-1)
@@ -50,10 +50,10 @@ def optimize(L, U, Vlist_start, perms, perms_reduced=None, reps=1, control_layer
             if i not in control_layers:
                 vlist_reduced.append(V)
         if len(control_layers)==0:
-            return -ansatz_2D_hessian_matrix(vlist, L, U, perms, reps=reps)
+            return -ansatz_2D_hessian_matrix(vlist, L, U, perms)
         else:
-            hessfunc1 = -ansatz_2D_hessian_matrix(vlist, L, U.conj().T, perms, reps=reps, flatten=False)
-            hessfunc2 = -ansatz_2D_hessian_matrix(vlist_reduced, L, U, perms_reduced, reps=reps, flatten=False)
+            hessfunc1 = -ansatz_2D_hessian_matrix(vlist, L, U.conj().T, perms, flatten=False)
+            hessfunc2 = -ansatz_2D_hessian_matrix(vlist_reduced, L, U, perms_reduced, flatten=False)
             for i, index in enumerate(indices):
                 for j, index_ in enumerate(indices):
                     hessfunc1[index, :, index_, :] += hessfunc2[i, :, j, :]
@@ -65,10 +65,10 @@ def optimize(L, U, Vlist_start, perms, perms_reduced=None, reps=1, control_layer
             if i not in control_layers:
                 vlist_reduced.append(V)
         if len(control_layers)==0:
-            return np.linalg.norm(ansatz_2D(vlist, L, perms, reps=reps) - U, ord=2)
+            return np.linalg.norm(ansatz_2D(vlist, L, perms) - U, ord=2)
         else:
-            return (np.linalg.norm(ansatz_2D(vlist, L, perms, reps=reps) - U.conj().T, ord=2) +\
-                np.linalg.norm(ansatz_2D(vlist_reduced, L, perms_reduced, reps=reps) - U, ord=2))/2
+            return (np.linalg.norm(ansatz_2D(vlist, L, perms) - U.conj().T, ord=2) +\
+                np.linalg.norm(ansatz_2D(vlist_reduced, L, perms_reduced) - U, ord=2))/2
 
 
     kwargs["gfunc"] = errfunc
