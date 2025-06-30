@@ -7,7 +7,7 @@ from utils_2D import (
 	)
 
 
-def ansatz_2D_hessian_matrix(Vlist, L, cU, perms, reps=1, flatten=True, unprojected=False):
+def ansatz_2D_hessian_matrix(Vlist, L, cU, perms, flatten=True, unprojected=False):
 	"""
 	Construct the Hessian matrix.
 	"""
@@ -23,7 +23,7 @@ def ansatz_2D_hessian_matrix(Vlist, L, cU, perms, reps=1, flatten=True, unprojec
 				Z = np.zeros(16)
 				Z[j] = 1
 				Z = real_to_antisymm(np.reshape(Z, (4, 4)))
-			dVZj = ansatz_2D_hess(Vlist, L, Vlist[k] @ Z, k, cU, perms, reps=reps, unprojected=unprojected)
+			dVZj = ansatz_2D_hess(Vlist, L, Vlist[k] @ Z, k, cU, perms, unprojected=unprojected)
 			for i in range(eta):
 				Hess[i, :, k, j] = dVZj[i].reshape(-1) if unprojected else \
 						antisymm_to_real(antisymm( Vlist[i].conj().T @ dVZj[i] )).reshape(-1)
@@ -115,17 +115,19 @@ def ansatz_2D_grad_directed(V, U_tilde, L, Z, perms):
 	return G
 
 
-def ansatz_2D_hess(Vlist, L, Z, k, cU, perms_extended, reps=1, unprojected=False):
+def ansatz_2D_hess(Vlist, L, Z, k, cU, perms_extended, unprojected=False):
 	dVlist = [None for i in range(len(Vlist))]
 
 	for i in range(len(Vlist)):
-		perms = perms_extended[reps*i:reps*(i+1)]
+		#perms = perms_extended[reps*i:reps*(i+1)] # TODO
+		perms = perms_extended[i]
 		if i==k:
 			continue
 
 		U_tilde = np.eye(2**L).reshape([2]*2*L)
 		for j in range(i+1, len(Vlist)):
-			perms_j = perms_extended[reps*j:reps*(j+1)]
+			#perms_j = perms_extended[reps*j:reps*(j+1)] #TODO
+			perms_j = perms_extended[j]
 			if k!=j:
 				for perm in perms_j:
 					U_tilde = applyG_block_tensor(Vlist[j], U_tilde, L, perm)
@@ -133,7 +135,8 @@ def ansatz_2D_hess(Vlist, L, Z, k, cU, perms_extended, reps=1, unprojected=False
 				U_tilde = ansatz_2D_grad_directed(Vlist[k], U_tilde, L, Z, perms_j)
 		U_tilde = (cU.conj().T @ U_tilde.reshape(2**L, 2**L)).reshape([2]*2*L)
 		for j in range(i):
-			perms_j = perms_extended[reps*j:reps*(j+1)]
+			#perms_j = perms_extended[reps*j:reps*(j+1)] #TODO
+			perms_j = perms_extended[j]
 			if k!=j:
 				for perm in perms_j:
 					U_tilde = applyG_block_tensor(Vlist[j], U_tilde, L, perm)
@@ -144,14 +147,17 @@ def ansatz_2D_hess(Vlist, L, Z, k, cU, perms_extended, reps=1, unprojected=False
 		dVlist[i] = dVi if unprojected else project_unitary_tangent(Vlist[i], dVi)
 
 	i = k
-	perms = perms_extended[reps*i:reps*(i+1)]
+	#perms = perms_extended[reps*i:reps*(i+1)] #TODO
+	perms = perms_extended[i]
 	U_tilde = np.eye(2**L).reshape([2]*2*L)
 	for j in range(i+1, len(Vlist)):
-		for perm in perms_extended[reps*j:reps*(j+1)]:
+		#for perm in perms_extended[reps*j:reps*(j+1)]: #TODO
+		for perm in perms_extended[j]:
 			U_tilde = applyG_block_tensor(Vlist[j], U_tilde, L, perm)
 	U_tilde = (cU.conj().T @ U_tilde.reshape(2**L, 2**L)).reshape([2]*2*L)
 	for j in range(i):
-		for perm in perms_extended[reps*j:reps*(j+1)]:
+		#for perm in perms_extended[reps*j:reps*(j+1)]: #TODO
+		for perm in perms_extended[j]:
 			U_tilde = applyG_block_tensor(Vlist[j], U_tilde, L, perm)
 	G = ansatz_2D_hess_single_layer(Vlist[k], L, Z, U_tilde, perms).conj().T
 	# Projection.

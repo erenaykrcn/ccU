@@ -7,8 +7,8 @@ from utils_2D import (polar_decomp, real_to_antisymm, real_to_skew,
 
 
 
-def err(vlist, U, L, perms, reps=1):
-    f_base = -np.trace(U.conj().T @ ansatz_2D(vlist, L, perms, reps=reps)).real
+def err(vlist, U, L, perms):
+    f_base = -np.trace(U.conj().T @ ansatz_2D(vlist, L, perms)).real
     return f_base
 
 

@@ -7,10 +7,11 @@ from utils_2D import (
 	)
 
 
-def ansatz_2D(Vlist, L, perms, reps=1):
+def ansatz_2D(Vlist, L, perms):
     ret_tensor = np.eye(2**L, dtype=complex).reshape([2]*2*L)
-    for j, perm in enumerate(perms):
-        ret_tensor = applyG_block_tensor(Vlist[j//reps], ret_tensor, L, perm)
+    for j, V in enumerate(Vlist):
+        for perm in perms[j]:
+            ret_tensor = applyG_block_tensor(V, ret_tensor, L, perm)
     return ret_tensor.reshape(2**L, 2**L)
 
 
@@ -42,20 +43,23 @@ def ansatz_2D_grad(V, L, U_tilde_tensor, perms):
     return G
 
 
-def ansatz_2D_grad_vector(Vlist, L, cU, perms_extended, reps=1, flatten=True, unprojected=False):
+def ansatz_2D_grad_vector(Vlist, L, cU, perms_extended, flatten=True, unprojected=False):
     grad = [None for V in Vlist]
 
     for i, V in enumerate(Vlist):
         U_tilde = np.eye(2**L).reshape([2]*2*L)
-        perms = perms_extended[reps*i:reps*(i+1)]
+        #perms = perms_extended[reps*i:reps*(i+1)] #TODO
+        perms = perms_extended[i]
 
         for j in range(i+1, len(Vlist)):
-            perms_j = perms_extended[reps*j:reps*(j+1)]
+            #perms_j = perms_extended[reps*j:reps*(j+1)] # TODO
+            perms_j = perms_extended[j]
             for perm in perms_j:
                 U_tilde = applyG_block_tensor(Vlist[j], U_tilde, L, perm)
         U_tilde = (cU.conj().T @ U_tilde.reshape(2**L, 2**L)).reshape([2]*2*L)
         for j in range(i):
-            perms_j = perms_extended[reps*j:reps*(j+1)]
+            #perms_j = perms_extended[reps*j:reps*(j+1)] # TODO
+            perms_j = perms_extended[j]
             for perm in perms_j:
                 U_tilde = applyG_block_tensor(Vlist[j], U_tilde, L, perm)
         grad[i] = ansatz_2D_grad(V, L, U_tilde, perms).conj().T
@@ -75,13 +79,16 @@ def ansatz_2D_grad_vector(Vlist, L, cU, perms_extended, reps=1, flatten=True, un
         ])
 
 
-def ansatz_sparse(Vlist, L, perms, input_state, reps=1):
+def ansatz_sparse(Vlist, L, perms, input_state):
     """
     Applies sequence of gates specified by Vlist and perms to ground_state.
     """
     state = input_state.copy()
-    for j, perm in enumerate(perms):
-        state = applyG_block_state(Vlist[j//reps], state, L, perm)
+    for j, V in enumerate(Vlist):
+        for perm in perms[j]:
+            state = applyG_block_state(V, state, L, perm)
+    #for j, perm in enumerate(perms):
+    #    state = applyG_block_state(Vlist[j//reps], state, L, perm)
     return state
 
 
