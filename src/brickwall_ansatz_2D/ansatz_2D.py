@@ -86,8 +86,6 @@ def ansatz_sparse(Vlist, L, perms, input_state):
     for j, V in enumerate(Vlist):
         for perm in perms[j]:
             state = applyG_block_state(V, state, L, perm)
-    #for j, perm in enumerate(perms):
-    #    state = applyG_block_state(Vlist[j//reps], state, L, perm)
     return state
 
 
