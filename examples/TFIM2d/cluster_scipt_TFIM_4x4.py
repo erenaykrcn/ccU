@@ -52,8 +52,10 @@ perms_ext_reduced = [perms_v]*1  + [perms_h]*1 + [perms_v]*1
 control_layers = [0, 2, 3, 5, 6, 8] # 6 control layers
 
 # 12 layers with 6 being controlled, 9 parameters in total.
-print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(Vlist_start, L, perms_extended, ground_state) - expm_multiply(
-    1j * t * hamil, ground_state), ord=2) + np.linalg.norm(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, ground_state) - expm_multiply(
+print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(Vlist_start, L, 
+  perms_extended, ground_state) - expm_multiply(
+    1j * t * hamil, ground_state), ord=2) + np.linalg.norm(ansatz_sparse(Vlist_reduced, L, 
+  perms_ext_reduced, ground_state) - expm_multiply(
     -1j * t * hamil, ground_state), ord=2))/2)
 
 
