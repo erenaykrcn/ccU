@@ -29,6 +29,11 @@ latt = qib.lattice.IntegerLattice((Lx, Ly), pbc=True)
 field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
 J, h, g = (1, 0, 3)
 hamil = qib.IsingHamiltonian(field, J, h, g).as_matrix()
+eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(hamil, k=10)
+idx = eigenvalues.argsort()
+eigenvalues_sort = eigenvalues[idx]
+eigenvectors_sort = eigenvectors[:,idx]
+ground_state = eigenvectors_sort[:, 0]
 
 X = np.array([[0, 1], [1, 0]])
 Z = np.array([[1, 0], [0, -1]])
