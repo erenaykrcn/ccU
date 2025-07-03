@@ -3,7 +3,6 @@
 """
 import numpy as np
 import qiskit
-from numpy import linalg as LA
 import qib
 import matplotlib.pyplot as plt
 import scipy
@@ -19,7 +18,7 @@ from ansatz_sparse import ansatz_sparse
 from optimize_sparse import optimize
 
 # Optimization parameters! Hard-coded here.
-rS = 100 # how many random state vectors to be sampled over for the cost function.
+rS    = 20 # how many random state vectors to be sampled over for the cost function.
 niter = 30 # number of iterations of the riemannian protocol.
 
 Lx, Ly = (4, 4)
@@ -48,8 +47,7 @@ perms_v = [[0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15],
           [1, 2, 5, 6, 9, 10, 13, 14, 3, 0, 7, 4, 11, 8, 15, 12]]
 perms_h = [[0, 4, 1, 5, 2, 6, 3, 7, 8, 12, 9, 13, 10, 14, 11, 15], 
           [4, 8, 5, 9, 6, 10, 7, 11, 12, 0, 13, 1, 14, 2, 15, 3]]
-#perms_v = [[0, 1, 2, 3], [1, 0, 3, 2]]
-#perms_h = [[0, 2, 1, 3], [2, 0, 3, 1]]
+
 
 Vlist_start = [YZ, V1, V2, V1, YZ, YZ, V3, V4, V3, YZ, YZ, V1, V2, V1, YZ]
 Vlist_reduced = [V1, V2, V1, V3, V4, V3, V1, V2, V1]
@@ -60,9 +58,13 @@ control_layers = [0, 4, 5, 9, 10, 14] # 6 control layers
 
 # 24 layers with 6 being controlled, 15 parameters in total.
 state = random_statevector(2**L).data
-print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(Vlist_start, L, perms_extended, state) - expm_multiply(
-    1j * t * hamil, state), ord=2) + np.linalg.norm(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, state) - expm_multiply(
-    -1j * t * hamil, state), ord=2))/2)
+print("Trotter error of the starting point: ", (
+    np.linalg.norm(ansatz_sparse(Vlist_start, L, perms_extended, state) - expm_multiply(
+      1j * t * hamil, state), ord=2) +\
+    np.linalg.norm(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, state) - expm_multiply(
+      -1j * t * hamil, state), ord=2)
+    )/2
+)
 
 
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_extended, perms_reduced=perms_ext_reduced, 
