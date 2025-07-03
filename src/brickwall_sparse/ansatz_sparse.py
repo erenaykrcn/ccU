@@ -76,6 +76,30 @@ def ansatz_sparse_grad_vector(Vlist, L, Uv, state, perms_extended, flatten=True,
 
 
 
+def construct_ccU(L, Vs, Xlists_opt, perms, perms_qc, control_layers):
+    qc = qiskit.QuantumCircuit(L+1)
+    qc.x(L)
+    for i, V in enumerate(Vs):
+        layer = i
+        if i in control_layers:
+            Glist = Xlists_opt[i]
+            qc_3 = qiskit.QuantumCircuit(3)
+            for j, G in enumerate(Glist):
+                qc_3.unitary( G, (3-1-perms_qc[j][1], 3-1-perms_qc[j][0]))
+
+            for perm in perms[layer]:
+                for j in range(L//2):
+                    qc.append(qc_3.to_gate(), [L-perm[2*j]-1, L-perm[2*j+1]-1, L])
+            
+        else:
+            for perm in perms[layer]:
+                for j in range(L//2):
+                    qc.unitary(V, [L-perm[2*j]-1, L-perm[2*j+1]-1])
+    qc.x(L)
+    return qc
+
+
+
 
 
 
