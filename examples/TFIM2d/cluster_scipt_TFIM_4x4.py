@@ -64,7 +64,7 @@ print("Trotter error of the starting point: ", (
 )
 
 
-"""Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_extended, perms_reduced=perms_ext_reduced, 
+Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_extended, perms_reduced=perms_ext_reduced, 
                                    control_layers=control_layers, rS=rS, niter=niter)
 plt.plot(err_iter)
 plt.yscale('log')
@@ -78,5 +78,5 @@ with h5py.File(file_path, "w") as f:
     f.create_dataset("f_iter", data=f_iter)
     f.create_dataset("err_iter", data=err_iter)
     f.attrs["L"] = L
-    f.attrs["t"] = float(t)"""
+    f.attrs["t"] = float(t)
 
