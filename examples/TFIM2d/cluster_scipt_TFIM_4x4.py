@@ -13,7 +13,7 @@ from qiskit.quantum_info import random_statevector
 
 import sys
 sys.path.append("../../src/brickwall_sparse")
-from utils_sparse import construct_ising_local_term
+from utils_sparse import construct_ising_local_term, get_perms
 from ansatz_sparse import ansatz_sparse
 from optimize_sparse import optimize
 
@@ -43,14 +43,11 @@ V3 = scipy.linalg.expm(-1j*t*hloc1/2)
 V4 = scipy.linalg.expm(-1j*t*hloc2)
 YZ = np.kron(Y, Z)
 
-perms_v = [[0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15], 
-          [1, 2, 5, 6, 9, 10, 13, 14, 3, 0, 7, 4, 11, 8, 15, 12]]
-perms_h = [[0, 4, 1, 5, 2, 6, 3, 7, 8, 12, 9, 13, 10, 14, 11, 15], 
-          [4, 8, 5, 9, 6, 10, 7, 11, 12, 0, 13, 1, 14, 2, 15, 3]]
-
 
 Vlist_start = [YZ, V1, V2, V1, YZ, YZ, V3, V4, V3, YZ, YZ, V1, V2, V1, YZ]
 Vlist_reduced = [V1, V2, V1, V3, V4, V3, V1, V2, V1]
+
+perms_v, perms_h = get_perms(Lx, Ly)
 perms_extended = [[perms_v[0]]] + [perms_v]*3 + [[perms_v[0]], [perms_h[0]]] +\
                     [perms_h]*3 + [[perms_h[0]], [perms_v[0]]] + [perms_v]*3 + [[perms_v[0]]]
 perms_ext_reduced = [perms_v]*3  + [perms_h]*3 + [perms_v]*3
@@ -67,7 +64,7 @@ print("Trotter error of the starting point: ", (
 )
 
 
-Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_extended, perms_reduced=perms_ext_reduced, 
+"""Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_extended, perms_reduced=perms_ext_reduced, 
                                    control_layers=control_layers, rS=rS, niter=niter)
 plt.plot(err_iter)
 plt.yscale('log')
@@ -81,5 +78,5 @@ with h5py.File(file_path, "w") as f:
     f.create_dataset("f_iter", data=f_iter)
     f.create_dataset("err_iter", data=err_iter)
     f.attrs["L"] = L
-    f.attrs["t"] = float(t)
+    f.attrs["t"] = float(t)"""
 
