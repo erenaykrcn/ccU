@@ -134,6 +134,51 @@ def partial_inner_product(v, w, k, l):
     return np.dot(np.conj(v_flat), w_flat.T)
 
 
+def get_perms(Lx, Ly):
+    # permutations specifying gate layout
+    # Verticals
+    L = Lx*Ly
+    perms_vercs = []
+    for i in range(Ly):
+        start_ind = Lx*i
+        perms_verc = []
+        for j in range(start_ind, start_ind+Lx):
+            perms_verc += [j, (j+Lx)%L]
+        perms_vercs.append(perms_verc)
+
+    if Ly % 2 == 0:
+        perms_vercs_compr = [perms_vercs[0], perms_vercs[1]]
+        for i in range(Ly//2):
+            perms_vercs_compr[i] += perms_vercs[i+Ly//2]
+    if Ly % 2 == 1:
+        perms_vercs_compr = [perms_vercs[0], perms_vercs[1], perms_vercs[-1]]
+        if Ly>3:
+            for i in range(Ly//2):
+                perms_vercs_compr[i] += perms_vercs[i+Ly//2]
+    # Horizontals
+    perms_horzs = []
+    for i in range(Lx):
+        start_ind = i
+        perms_horz = []
+        for j in range(start_ind, L, Lx):
+            if start_ind != Lx-1:
+                perms_horz += [j, j+1]
+            else:
+                perms_horz += [j, j+1-Lx]
+        perms_horzs.append(perms_horz)
+    
+    if Lx % 2 == 0:
+        perms_horzs_compr = [perms_horzs[0], perms_horzs[1]]
+        for i in range(Lx//2):
+            perms_horzs_compr[i] += perms_horzs[i+Lx//2]
+    if Lx % 2 == 1:
+        perms_horzs_compr = [perms_horzs[0], perms_horzs[1], perms_horzs[-1]]
+        if Lx>3:
+            for i in range(Lx//2):
+                perms_horzs_compr[i] += perms_horzs[i+Lx//2]
+    
+    return perms_vercs_compr, perms_horzs_compr
+
 
 
 def reduce_list(vlist):
