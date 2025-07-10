@@ -97,6 +97,7 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
             e = 0
             for v in random_svs:
                 e += np.linalg.norm(ansatz_sparse(vlist, L, perms, v) - expm_multiply(-1j * t * hamil, v), ord=2)
+            print("Current error: ", e/rS)
             return e/rS
         else:
             vlist_reduced = []
@@ -108,6 +109,7 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
             for v in random_svs:
                 e += np.linalg.norm(ansatz_sparse(vlist, L, perms, v) - expm_multiply(1j * t * hamil,v), ord=2) 
                 e += np.linalg.norm(ansatz_sparse(vlist_reduced, L, perms_reduced, v) - expm_multiply(-1j * t * hamil, v), ord=2)
+            print("Current error: ", e/(2*rS))
             return e/(2*rS)
 
     kwargs["gfunc"] = errfunc
