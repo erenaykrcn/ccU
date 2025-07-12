@@ -34,7 +34,7 @@ Z = np.array([[1, 0], [0, -1]])
 Y = np.array([[0, -1j], [1j, 0]])
 I2 = np.array([[1, 0], [0, 1]])
 
-hloc1 = construct_ising_local_term(J, 0, 0, ndim=2)/2
+hloc1 = construct_ising_local_term(J, 0, 0, ndim=2)
 hloc2 = g*(np.kron(X, I2)+np.kron(I2, X))/4
 
 V1 = scipy.linalg.expm(-1j*t*hloc1/4)
