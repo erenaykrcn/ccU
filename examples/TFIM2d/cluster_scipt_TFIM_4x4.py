@@ -18,12 +18,12 @@ from ansatz_sparse import ansatz_sparse
 from optimize_sparse import optimize
 
 # Optimization parameters! Hard-coded here.
-rS    = 20 # how many random state vectors to be sampled over for the cost function.
-niter = 30 # number of iterations of the riemannian protocol.
+rS    = 1 # how many random state vectors to be sampled over for the cost function.
+niter = 10 # number of iterations of the riemannian protocol.
 
-Lx, Ly = (2, 2)
+Lx, Ly = (4, 4)
 L = Lx*Ly
-t = 0.25
+t = 0.5
 latt = qib.lattice.IntegerLattice((Lx, Ly), pbc=True)
 field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
 J, h, g = (1, 0, 3)
@@ -48,8 +48,8 @@ YZ = np.kron(Y, Z)
 Vlist_start = [YZ, V1, V2, V1, YZ, YZ, V3, V4, V3, YZ, YZ, V1, V2, V1, YZ]
 Vlist_reduced = [V1, V2, V1, V3, V4, V3, V1, V2, V1]
 
-#perms_v, perms_h = get_perms(Lx, Ly)
-perms_v, perms_h = ([[0, 1, 2, 3], [1, 0, 3, 2]], [[0, 2, 1, 3], [2, 0, 3, 1]])
+perms_v, perms_h = get_perms(Lx, Ly)
+
 
 perms_extended = [[perms_v[0]]] + [perms_v]*3 + [[perms_v[0]], [perms_h[0]]] +\
                     [perms_h]*3 + [[perms_h[0]], [perms_v[0]]] + [perms_v]*3 + [[perms_v[0]]]
@@ -67,7 +67,7 @@ print("Trotter error of the starting point: ",
   )/2
 )
 
-"""
+
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_extended, perms_reduced=perms_ext_reduced, 
                                    control_layers=control_layers, rS=rS, niter=niter)
 plt.plot(err_iter)
@@ -83,5 +83,5 @@ with h5py.File(file_path, "w") as f:
     f.create_dataset("err_iter", data=err_iter)
     f.attrs["L"] = L
     f.attrs["t"] = float(t)
-"""
+
 
