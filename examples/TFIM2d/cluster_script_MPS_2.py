@@ -18,6 +18,9 @@ from utils_MPS import (random_mps, apply_localGate, apply_two_site_operator,
 						mps_to_state_vector, get_mps_of_sv, mps_fidelity)
 from MPS import trotter, ccU
 
+
+J, h, g = (1, 0, 3)
+
 t = 0.25
 dt    = 0.01 # Trotter step to be used for the 'quasi'-exact reference
 order = 4  # Trotter order to be used for the 'quasi'-exact reference
