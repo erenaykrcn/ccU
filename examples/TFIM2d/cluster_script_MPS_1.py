@@ -113,5 +113,5 @@ with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS.h5",
     mps_ccU_backwards = [mps_group[f"site_{i}"][()] for i in range(L+1)]
 print("ccU backwards fidelity: ", mps_fidelity(exact_mps_backwards_EXT, mps_ccU_backwards))
 with open("eval_results.txt", "a") as file:
-	file.write("\n"+ ccU backwards fidelity: " + str(mps_fidelity(exact_mps_backwards_EXT, mps_ccU_backwards)) + "\n")
+	file.write("\n ccU backwards fidelity: " + str(mps_fidelity(exact_mps_backwards_EXT, mps_ccU_backwards)) + "\n")
 
