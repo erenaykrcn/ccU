@@ -18,7 +18,7 @@ from utils_MPS import (random_mps, apply_localGate, apply_two_site_operator,
 						mps_to_state_vector, get_mps_of_sv, mps_fidelity)
 from MPS import trotter, ccU
 
-
+t=0.25
 dt    = 0.1 # Trotter step to be used for the 'quasi'-exact reference
 order = 2.  # Trotter order to be used for the 'quasi'-exact reference
 initial_state_BD, exact_state_BD, ccU_BD = (2**2, 2**8, 2**8) # Bond dimensions
