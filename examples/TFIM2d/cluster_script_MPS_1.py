@@ -18,13 +18,13 @@ from utils_MPS import (random_mps, apply_localGate, apply_two_site_operator,
 						mps_to_state_vector, get_mps_of_sv, mps_fidelity)
 from MPS import trotter, ccU
 
-t=0.25
-dt    = 0.1 # Trotter step to be used for the 'quasi'-exact reference
-order = 2.  # Trotter order to be used for the 'quasi'-exact reference
-initial_state_BD, exact_state_BD, ccU_BD = (2**2, 2**8, 2**8) # Bond dimensions
+t = 0.25
+dt    = 0.01 # Trotter step to be used for the 'quasi'-exact reference
+order = 4  # Trotter order to be used for the 'quasi'-exact reference
+initial_state_BD, exact_state_BD, ccU_BD = (2**2, 2**11, 2**10) # Bond dimensions
 
 
-Lx, Ly = (4, 4)
+Lx, Ly = (6, 6)
 L= Lx*Ly
 
 # construct Hamiltonian
@@ -113,5 +113,5 @@ with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS.h5",
     mps_ccU_backwards = [mps_group[f"site_{i}"][()] for i in range(L+1)]
 print("ccU backwards fidelity: ", mps_fidelity(exact_mps_backwards_EXT, mps_ccU_backwards))
 with open("eval_results.txt", "a") as file:
-	file.write("ccU backwards fidelity: " + str(mps_fidelity(exact_mps_backwards_EXT, mps_ccU_backwards)) + "\n")
+	file.write("\n"+ ccU backwards fidelity: " + str(mps_fidelity(exact_mps_backwards_EXT, mps_ccU_backwards)) + "\n")
 
