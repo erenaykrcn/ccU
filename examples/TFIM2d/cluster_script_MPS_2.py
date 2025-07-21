@@ -113,6 +113,6 @@ with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}_MPS_103_t0.25_ccU_MPS_FORWARDS.h5", "
     mps_ccU_forwards = [mps_group[f"site_{i}"][()] for i in range(L+1)]
 print("ccU forwards fidelity: ", mps_fidelity(exact_mps_forwards_EXT, mps_ccU_forwards))
 with open("eval_results.txt", "a") as file:
-	file.write("ccU forwards fidelity: " + str(mps_fidelity(exact_mps_forwards_EXT, mps_ccU_forwards)))
+	file.write("ccU forwards fidelity: " + str(mps_fidelity(exact_mps_forwards_EXT, mps_ccU_forwards))+ "\n")
 
 
