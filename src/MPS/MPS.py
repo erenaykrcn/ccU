@@ -9,11 +9,10 @@ from utils_sparse import construct_ising_local_term, reduce_list, X, I2, get_per
 import rqcopt as oc
 
 
-def trotter(mps, t, L, Lx, Ly, J, g, dag=False, max_bond_dim=None, dt=0.1, trotter_order=2):
+def trotter(mps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=None, dt=0.1, trotter_order=2):
     nsteps = np.abs(int(np.ceil(t/dt)))
     t = t/nsteps
     print("dt", t)
-    perms_v, perms_h = get_perms(Lx, Ly)
     indices = oc.SplittingMethod.suzuki(2, int(np.log(trotter_order)/np.log(2))).indices
     coeffs = oc.SplittingMethod.suzuki(2, int(np.log(trotter_order)/np.log(2))).coeffs
     
