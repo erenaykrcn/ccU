@@ -21,10 +21,10 @@ from MPS import trotter, ccU
 
 J, h, g = (1, 0, 3)
 
-t = 0.25
-dt    = 0.1 # Trotter step to be used for the 'quasi'-exact reference
+t = 0.25/4
+dt    = 0.25/8 # Trotter step to be used for the 'quasi'-exact reference
 order = 2  # Trotter order to be used for the 'quasi'-exact reference
-initial_state_BD, exact_state_BD, ccU_BD = (2**2, 2**11, 2**10) # Bond dimensions
+initial_state_BD, exact_state_BD, ccU_BD = (2**2, 2**8, 2**8) # Bond dimensions
 
 
 Lx, Ly = (5, 5)
