@@ -69,37 +69,41 @@ else:
 			mps_group.create_dataset(f"site_{i}", data=tensor)
 
 
-exact_mps_back_input = initial_mps.copy()
-exact_mps_backwards = trotter(exact_mps_back_input, -t, L, Lx, Ly, J, g, perms_v, perms_h, max_bond_dim=exact_state_BD, trotter_order=order, dt=dt)
-with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}.h5", "w") as f:
-    mps_group = f.create_group("mps")
-    for i, tensor in enumerate(exact_mps_backwards):
-        mps_group.create_dataset(f"site_{i}", data=tensor)
-    f.attrs["L"] = L
-    f.attrs["t"] = float(t)
-    f.attrs["order"] = order
-    f.attrs["dt"] = dt
-with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}.h5", "r") as f:
-    mps_group = f["mps"]
-    exact_mps_backwards = [mps_group[f"site_{i}"][()] for i in range(L)]
+if not os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}.h5"):
+    exact_mps_back_input = initial_mps.copy()
+    exact_mps_backwards = trotter(exact_mps_back_input, -t, L, Lx, Ly, J, g, max_bond_dim=exact_state_BD, trotter_order=order, dt=dt)
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}.h5", "w") as f:
+        mps_group = f.create_group("mps")
+        for i, tensor in enumerate(exact_mps_backwards):
+            mps_group.create_dataset(f"site_{i}", data=tensor)
+        f.attrs["L"] = L
+        f.attrs["t"] = float(t)
+        f.attrs["order"] = order
+        f.attrs["dt"] = dt
+else:
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}.h5", "r") as f:
+        mps_group = f["mps"]
+        exact_mps_backwards = [mps_group[f"site_{i}"][()] for i in range(L)]
 
 
 A0 = np.zeros((2, 1, 1), dtype=np.complex128)
 A0[0, :, :] = 1
 initial_mps_backwards = [A0]+initial_mps
 exact_mps_backwards_EXT = [A0]+exact_mps_backwards
-mps_ccU_backwards = ccU(initial_mps_backwards, L, Vlist, Xlists_opt, perms_extended, perms_qc, control_layers, max_bond_dim=ccU_BD)
-with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS.h5", "w") as f:
-    mps_group = f.create_group("mps")
-    for i, tensor in enumerate(mps_ccU_backwards):
-        mps_group.create_dataset(f"site_{i}", data=tensor)
-    f.attrs["L"] = L
-    f.attrs["t"] = float(t)
-    f.attrs["order"] = order
-    f.attrs["dt"] = dt
-with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS.h5", "r") as f:
-    mps_group = f["mps"]
-    mps_ccU_backwards = [mps_group[f"site_{i}"][()] for i in range(L+1)]
+if not os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS.h5"):
+    mps_ccU_backwards = ccU(initial_mps_backwards, L, Vlist, Xlists_opt, perms_extended, perms_qc, control_layers, max_bond_dim=ccU_BD)
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS.h5", "w") as f:
+        mps_group = f.create_group("mps")
+        for i, tensor in enumerate(mps_ccU_backwards):
+            mps_group.create_dataset(f"site_{i}", data=tensor)
+        f.attrs["L"] = L
+        f.attrs["t"] = float(t)
+        f.attrs["order"] = order
+        f.attrs["dt"] = dt
+else:
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS.h5", "r") as f:
+        mps_group = f["mps"]
+        mps_ccU_backwards = [mps_group[f"site_{i}"][()] for i in range(L+1)]
 print("ccU backwards fidelity: ", mps_fidelity(exact_mps_backwards_EXT, mps_ccU_backwards))
 with open("eval_results.txt", "a") as file:
 	file.write("\n ccU backwards fidelity: " + str(mps_fidelity(exact_mps_backwards_EXT, mps_ccU_backwards)) + "\n")

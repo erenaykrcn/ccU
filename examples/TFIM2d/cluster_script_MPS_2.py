@@ -70,37 +70,41 @@ else:
 			mps_group.create_dataset(f"site_{i}", data=tensor)
 
 
-exact_mps_forw_input = initial_mps.copy()
-exact_mps_forwards = trotter(exact_mps_forw_input, t, L, Lx, Ly, J, g, perms_v, perms_h, max_bond_dim=exact_state_BD, trotter_order=order, dt=dt)
-with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}.h5", "w") as f:
-    mps_group = f.create_group("mps")
-    for i, tensor in enumerate(exact_mps_forwards):
-        mps_group.create_dataset(f"site_{i}", data=tensor)
-    f.attrs["L"] = L
-    f.attrs["t"] = float(t)
-    f.attrs["order"] = order
-    f.attrs["dt"] = dt
-with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}.h5", "r") as f:
-    mps_group = f["mps"]
-    exact_mps_forwards = [mps_group[f"site_{i}"][()] for i in range(L)]
+if os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}.h5"):
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}.h5", "r") as f:
+        mps_group = f["mps"]
+        exact_mps_forwards = [mps_group[f"site_{i}"][()] for i in range(L)]
+else:
+    exact_mps_forw_input = initial_mps.copy()
+    exact_mps_forwards = trotter(exact_mps_forw_input, t, L, Lx, Ly, J, g, max_bond_dim=exact_state_BD, trotter_order=order, dt=dt)
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}.h5", "w") as f:
+        mps_group = f.create_group("mps")
+        for i, tensor in enumerate(exact_mps_forwards):
+            mps_group.create_dataset(f"site_{i}", data=tensor)
+        f.attrs["L"] = L
+        f.attrs["t"] = float(t)
+        f.attrs["order"] = order
+        f.attrs["dt"] = dt
 
 
 A0 = np.zeros((2, 1, 1), dtype=np.complex128)
 A0[1, :, :] = 1
 initial_mps_forwards = [A0]+initial_mps
 exact_mps_forwards_EXT = [A0]+exact_mps_forwards
-mps_ccU_forwards = ccU(initial_mps_forwards, L, Vlist, Xlists_opt, perms_extended, perms_qc, control_layers, max_bond_dim=ccU_BD)
-with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}_MPS_103_t0.25_ccU_MPS_FORWARDS.h5", "w") as f:
-    mps_group = f.create_group("mps")
-    for i, tensor in enumerate(mps_ccU_forwards):
-        mps_group.create_dataset(f"site_{i}", data=tensor)
-    f.attrs["L"] = L
-    f.attrs["t"] = float(t)
-    f.attrs["order"] = order
-    f.attrs["dt"] = dt
-with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}_MPS_103_t0.25_ccU_MPS_FORWARDS.h5", "r") as f:
-    mps_group = f["mps"]
-    mps_ccU_forwards = [mps_group[f"site_{i}"][()] for i in range(L+1)]
+if not os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}_MPS_103_t0.25_ccU_MPS_FORWARDS.h5"):
+    mps_ccU_forwards = ccU(initial_mps_forwards, L, Vlist, Xlists_opt, perms_extended, perms_qc, control_layers, max_bond_dim=ccU_BD)
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}_MPS_103_t0.25_ccU_MPS_FORWARDS.h5", "w") as f:
+        mps_group = f.create_group("mps")
+        for i, tensor in enumerate(mps_ccU_forwards):
+            mps_group.create_dataset(f"site_{i}", data=tensor)
+        f.attrs["L"] = L
+        f.attrs["t"] = float(t)
+        f.attrs["order"] = order
+        f.attrs["dt"] = dt
+else:
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}_MPS_103_t0.25_ccU_MPS_FORWARDS.h5", "r") as f:
+        mps_group = f["mps"]
+        mps_ccU_forwards = [mps_group[f"site_{i}"][()] for i in range(L+1)]
 print("ccU forwards fidelity: ", mps_fidelity(exact_mps_forwards_EXT, mps_ccU_forwards))
 with open("eval_results.txt", "a") as file:
 	file.write("\n ccU forwards fidelity: " + str(mps_fidelity(exact_mps_forwards_EXT, mps_ccU_forwards))+ "\n")
