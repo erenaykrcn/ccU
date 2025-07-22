@@ -76,7 +76,7 @@ if os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_FORWARD
         exact_mps_forwards = [mps_group[f"site_{i}"][()] for i in range(L)]
 else:
     exact_mps_forw_input = initial_mps.copy()
-    exact_mps_forwards = trotter(exact_mps_forw_input, t, L, Lx, Ly, J, g, max_bond_dim=exact_state_BD, trotter_order=order, dt=dt)
+    exact_mps_forwards = trotter(exact_mps_forw_input, t, L, Lx, Ly, J, g, perms_v, perms_h, max_bond_dim=exact_state_BD, trotter_order=order, dt=dt)
     with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}.h5", "w") as f:
         mps_group = f.create_group("mps")
         for i, tensor in enumerate(exact_mps_forwards):
