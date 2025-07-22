@@ -21,7 +21,7 @@ from MPS import trotter, ccU
 
 J, h, g = (1, 0, 3)
 
-t = 0.25/4
+t = 0.25
 dt    = 0.25/8 # Trotter step to be used for the 'quasi'-exact reference
 order = 2  # Trotter order to be used for the 'quasi'-exact reference
 initial_state_BD, exact_state_BD, ccU_BD = (2**2, 2**8, 2**8) # Bond dimensions
@@ -68,6 +68,9 @@ for i in control_layers:
 import os
 initial_mps = []
 if os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_INITIAL_MPS.h5"):
+    with open("trotter_log.txt", "a") as file:
+        file.write(f"Init MPS loaded \n")
+
     with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_INITIAL_MPS.h5", "r") as f:
         mps_group = f["mps"]
         initial_mps = [mps_group[f"site_{i}"][()] for i in range(L)]
@@ -79,14 +82,14 @@ else:
 			mps_group.create_dataset(f"site_{i}", data=tensor)
 
 
-if os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}_BD{exact_state_BD}.h5"):
-    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}_BD{exact_state_BD}.h5", "r") as f:
+if os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t{t}_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}_BD{exact_state_BD}.h5"):
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t{t}_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}_BD{exact_state_BD}.h5", "r") as f:
         mps_group = f["mps"]
         exact_mps_forwards = [mps_group[f"site_{i}"][()] for i in range(L)]
 else:
     exact_mps_forw_input = initial_mps.copy()
     exact_mps_forwards = trotter(exact_mps_forw_input, t, L, Lx, Ly, J, g, perms_v, perms_h, max_bond_dim=exact_state_BD, trotter_order=order, dt=dt)
-    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}_BD{exact_state_BD}.h5", "w") as f:
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t{t}_TROTTER_MPS_FORWARDS_Order{order}_dt{dt}_BD{exact_state_BD}.h5", "w") as f:
         mps_group = f.create_group("mps")
         for i, tensor in enumerate(exact_mps_forwards):
             mps_group.create_dataset(f"site_{i}", data=tensor)
