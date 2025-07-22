@@ -16,8 +16,8 @@ def trotter(mps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=N
     indices = oc.SplittingMethod.suzuki(2, int(np.log(trotter_order)/np.log(2))).indices
     coeffs = oc.SplittingMethod.suzuki(2, int(np.log(trotter_order)/np.log(2))).coeffs
     
-    hloc1 = J*np.kron(Z, Z)
-    hloc2 = g*(np.kron(X, I2)+np.kron(I2, X))/4
+    hloc1 = g*(np.kron(X, I2)+np.kron(I2, X))/4
+    hloc2 = J*np.kron(Z, Z)
     hlocs = (hloc1, hloc2)
     Vlist_start = []
     for i, c in zip(indices, coeffs):
