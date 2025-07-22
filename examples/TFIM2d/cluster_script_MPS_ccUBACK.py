@@ -23,7 +23,7 @@ J, h, g = (1, 0, 3)
 t = 0.25
 dt    = 0.01 # Trotter step to be used for the 'quasi'-exact reference
 order = 2  # Trotter order to be used for the 'quasi'-exact reference
-initial_state_BD, exact_state_BD, ccU_BD = (2**2, 2**11, 2**10) # Bond dimensions
+initial_state_BD, exact_state_BD, ccU_BD = (2**2, 2**8, 2**8) # Bond dimensions
 
 
 Lx, Ly = (6, 6)
@@ -73,9 +73,9 @@ else:
 A0 = np.zeros((2, 1, 1), dtype=np.complex128)
 A0[0, :, :] = 1
 initial_mps_backwards = [A0]+initial_mps
-if not os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS.h5"):
+if not os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS_BD{ccU_BD}.h5"):
     mps_ccU_backwards = ccU(initial_mps_backwards, L, Vlist, Xlists_opt, perms_extended, perms_qc, control_layers, max_bond_dim=ccU_BD)
-    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS.h5", "w") as f:
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS_BD{ccU_BD}.h5", "w") as f:
         mps_group = f.create_group("mps")
         for i, tensor in enumerate(mps_ccU_backwards):
             mps_group.create_dataset(f"site_{i}", data=tensor)
@@ -84,14 +84,14 @@ if not os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWAR
         f.attrs["order"] = order
         f.attrs["dt"] = dt
 else:
-    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS.h5", "r") as f:
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_ccU_MPS_BACKWARDS_BD{ccU_BD}.h5", "r") as f:
         mps_group = f["mps"]
         mps_ccU_backwards = [mps_group[f"site_{i}"][()] for i in range(L+1)]
 
 
 exact_mps_backwards = []
-if os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}.h5"):
-    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}.h5", "r") as f:
+if os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}_BD{exact_state_BD}.h5"):
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}_BD{exact_state_BD}.h5", "r") as f:
         mps_group = f["mps"]
         exact_mps_backwards = [mps_group[f"site_{i}"][()] for i in range(L)]
     exact_mps_backwards_EXT = [A0]+exact_mps_backwards

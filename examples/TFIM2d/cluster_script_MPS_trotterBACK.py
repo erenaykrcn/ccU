@@ -23,7 +23,7 @@ J, h, g = (1, 0, 3)
 t = 0.25
 dt    = 0.01 # Trotter step to be used for the 'quasi'-exact reference
 order = 2  # Trotter order to be used for the 'quasi'-exact reference
-initial_state_BD, exact_state_BD, ccU_BD = (2**2, 2**9, 2**10) # Bond dimensions
+initial_state_BD, exact_state_BD, ccU_BD = (2**2, 2**8, 2**8) # Bond dimensions
 
 
 Lx, Ly = (6, 6)
@@ -69,10 +69,10 @@ else:
 			mps_group.create_dataset(f"site_{i}", data=tensor)
 
 
-if not os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}.h5"):
+if not os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}_BD{exact_state_BD}.h5"):
     exact_mps_back_input = initial_mps.copy()
     exact_mps_backwards = trotter(exact_mps_back_input, -t, L, Lx, Ly, J, g, perms_v, perms_h, max_bond_dim=exact_state_BD, trotter_order=order, dt=dt)
-    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}.h5", "w") as f:
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}_BD{exact_state_BD}.h5", "w") as f:
         mps_group = f.create_group("mps")
         for i, tensor in enumerate(exact_mps_backwards):
             mps_group.create_dataset(f"site_{i}", data=tensor)
@@ -81,7 +81,7 @@ if not os.path.isfile(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BAC
         f.attrs["order"] = order
         f.attrs["dt"] = dt
 else:
-    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}.h5", "r") as f:
+    with h5py.File(f"./MPS/tfim2d_Lx{Lx}Ly{Ly}__MPS_103_t0.25_TROTTER_MPS_BACKWARDS_Order{order}_dt{dt}_BD{exact_state_BD}.h5", "r") as f:
         mps_group = f["mps"]
         exact_mps_backwards = [mps_group[f"site_{i}"][()] for i in range(L)]
 
