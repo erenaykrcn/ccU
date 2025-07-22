@@ -23,20 +23,18 @@ def trotter(mps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=N
     for i, c in zip(indices, coeffs):
         Vlist_start.append(scipy.linalg.expm(-1j*c*t*hlocs[i]))
 
-    one_gate_applied = False
+    gates = 0
     for n in range(nsteps):
         for layer, V in enumerate(Vlist_start):
             for perm in perms_h:
                 for j in range(len(perm)//2):
                     mps = apply_localGate(mps, V, perm[2*j], perm[2*j+1], max_bond_dim=max_bond_dim)
-
-                    if not one_gate_applied:
-                        with open("trotter_log.txt", "a") as file:
-                            file.write(f"First Gate applied \n")
-                            one_gate_applied = True
+                    gates += 1
+                    with open("trotter_log.txt", "a") as file:
+                        file.write(f"Gate {gates} \n")
 
             with open("trotter_log.txt", "a") as file:
-                file.write(f"Normalization starting \n")
+                file.write(f"\n Normalization starting \n")
             mps = right_normalize(mps)
             with open("trotter_log.txt", "a") as file:
                 file.write(f"Normalization finished \n")
@@ -44,6 +42,9 @@ def trotter(mps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=N
             for perm in perms_v:
                 for j in range(len(perm)//2):
                     mps = apply_localGate(mps, V, perm[2*j], perm[2*j+1], max_bond_dim=max_bond_dim)
+                    gates += 1
+                    with open("trotter_log.txt", "a") as file:
+                        file.write(f"Gate {gates} \n")
                     
             with open("trotter_log.txt", "a") as file:
                 file.write(f"Normalization starting \n")
