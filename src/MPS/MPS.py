@@ -35,8 +35,8 @@ def trotter(mps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=N
                     mps = apply_localGate(mps, V, perm[2*j], perm[2*j+1], max_bond_dim=max_bond_dim)
             mps = right_normalize(mps)
 
-        with open("trotter_log.txt", "a") as file:
-            file.write(f"Time step {n}/{nsteps} applied \n")
+            with open("trotter_log.txt", "a") as file:
+                file.write(f"Time step {n}/{nsteps}, layer {layer}/{len(Vlist_start)} applied \n")
     return mps
 
 
