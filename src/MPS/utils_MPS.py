@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.linalg import svd as robust_svd
 
 
 def left_normalize(Ms):
@@ -8,7 +9,7 @@ def left_normalize(Ms):
         M = np.tensordot(T, M, axes=(1, 1)) 
         M = np.transpose(M, [1, 0, 2])
         d, chi1, chi2 = M.shape             
-        U, S, Vh = np.linalg.svd(np.reshape(M, [d*chi1, chi2]), full_matrices=False)
+        U, S, Vh = safe_svd(np.reshape(M, [d*chi1, chi2]), full_matrices=False)
         A = np.reshape(U, [d, chi1, -1])   
         As.append(A)                        
         T = np.diag(S) @ Vh                 
@@ -17,6 +18,7 @@ def left_normalize(Ms):
     As[0] = As[0]*np.sign(T)
     return As
 
+
 def right_normalize(Ms):
     Bs = []
     T = np.ones((1, 1))
@@ -24,12 +26,21 @@ def right_normalize(Ms):
         M = np.tensordot(M, T, axes=(2, 0))
         d, chi1, chi2 = M.shape
         M = np.reshape(M, [chi1, d*chi2])
-        U, S, Vh = np.linalg.svd(M, full_matrices=False)
+        U, S, Vh = safe_svd(M, full_matrices=False)
         _, chi_s = U.shape
         Bs.append(Vh.reshape([chi_s, d, chi2]).transpose([1, 0, 2]))
         T = U@np.diag(S)
     Bs[0] = Bs[0] * np.sign(T)
     return Bs[::-1]
+
+
+def safe_svd(matrix, full_matrices=False):
+    try:
+        return np.linalg.svd(matrix, full_matrices=full_matrices)
+    except np.linalg.LinAlgError:
+        print("⚠️ Warning: Falling back to scipy SVD due to convergence failure.")
+        matrix += 1e-12 * np.random.randn(*matrix.shape)
+        return robust_svd(matrix, full_matrices=full_matrices)
 
     
 def random_mps(L_plus_1, max_bond_dim=None, anc=None):
@@ -96,7 +107,7 @@ def get_mps_of_sv(state_vector, max_bond_dim=None, cutoff=1e-10):
         D = psi.shape[0]
         psi = psi.reshape(D, -1)  # Flatten remaining qubits
         # SVD
-        U, S, Vh = np.linalg.svd(psi, full_matrices=False)
+        U, S, Vh = safe_svd(psi, full_matrices=False)
 
         # Truncate
         #keep = (S > cutoff)
@@ -156,7 +167,7 @@ def apply_two_site_operator(mps, gate, site, max_bond_dim=None, cutoff=1e-10):
     theta = theta.reshape(2 * Dl, 2 * Dr)      # → (2*Dl, 2*Dr)
 
     # SVD
-    U, S, Vh = np.linalg.svd(theta, full_matrices=False)
+    U, S, Vh = safe_svd(theta, full_matrices=False)
     
     # Truncate
     keep = np.where(S > cutoff)[0]
