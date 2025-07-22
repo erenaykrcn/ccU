@@ -24,7 +24,7 @@ def trotter(mps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=N
         Vlist_start.append(scipy.linalg.expm(-1j*c*t*hlocs[i]))
 
     for n in range(nsteps):
-        for layer, V in enumerate(Vlist_start):            
+        for layer, V in enumerate(Vlist_start):          
             for perm in perms_v:
                 for j in range(len(perm)//2):
                     mps = apply_localGate(mps, V, perm[2*j], perm[2*j+1], max_bond_dim=max_bond_dim)
@@ -34,6 +34,9 @@ def trotter(mps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=N
                 for j in range(len(perm)//2):
                     mps = apply_localGate(mps, V, perm[2*j], perm[2*j+1], max_bond_dim=max_bond_dim)
             mps = right_normalize(mps)
+
+        with open("trotter_log.txt", "a") as file:
+            file.write(f"Time step {n}/{nsteps} applied \n")
     return mps
 
 
@@ -53,6 +56,9 @@ def ccU(mps, L, Vlist, Xlists_opt, perms, perms_qc, control_layers, max_bond_dim
                 for j in range(len(perm)//2):
                     mps = apply_localGate(mps, V, perm[2*j]+1, perm[2*j+1]+1, max_bond_dim=max_bond_dim)
             mps = right_normalize(mps)
+
+        with open("ccU_log.txt", "a") as file:
+            file.write(f"Layer {i}/{len(Vlist)} applied \n")
     mps = apply_localGate(mps, np.kron(X, I2), 0, 1, max_bond_dim=max_bond_dim)
 
     return mps
