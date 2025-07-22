@@ -39,6 +39,8 @@ def safe_svd(matrix, full_matrices=False):
         return np.linalg.svd(matrix, full_matrices=full_matrices)
     except np.linalg.LinAlgError:
         print("⚠️ Warning: Falling back to scipy SVD due to convergence failure.")
+        with open("safe_svd.txt", "a") as file:
+            file.write(f"⚠️ Warning: Falling back to scipy SVD due to convergence failure. \n")
         matrix += 1e-12 * np.random.randn(*matrix.shape)
         return robust_svd(matrix, full_matrices=full_matrices)
 
