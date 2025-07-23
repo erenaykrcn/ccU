@@ -48,7 +48,7 @@ for i, V in enumerate(Vlist):
         for perm in perms:
             t = TEBD2D(peps, ham=LocalHam2D(Lx, Ly, 
                     {(map_[perm[2*j]], map_[perm[2*j+1]]): scipy.linalg.logm(V) for j in range(L//2)}, cyclic=True),
-            tau=-1, D=5)
+            tau=-1, D=8 if i<10 else 4)
             t.sweep(tau=-1)
             peps = t.state
             peps /= peps.norm()
