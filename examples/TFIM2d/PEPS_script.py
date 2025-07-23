@@ -40,20 +40,21 @@ peps = qtn.PEPS.rand(Lx, Ly, bond_dim=1, phys_dim=2, cyclic=True)
 peps /= peps.norm()
 peps_copy = peps.copy()
 sv = peps_copy.to_dense()[:, 0]
-sv = expm_multiply(1j * 0.25 * hamil, sv)
+sv = expm_multiply(-1j * 0.25 * hamil, sv)
 
 for i, V in enumerate(Vlist):
-    perms = perms_extended[i]
-    for perm in perms:
-        t = TEBD2D(peps, ham=LocalHam2D(Lx, Ly, 
-                {(map_[perm[2*j]], map_[perm[2*j+1]]): scipy.linalg.logm(V) for j in range(L//2)}, cyclic=True),
-        tau=-1, D=5)
-        t.sweep(tau=-1)
-        peps = t.state
-        peps /= peps.norm()
+    if i not in control_layers:
+        perms = perms_extended[i]
+        for perm in perms:
+            t = TEBD2D(peps, ham=LocalHam2D(Lx, Ly, 
+                    {(map_[perm[2*j]], map_[perm[2*j+1]]): scipy.linalg.logm(V) for j in range(L//2)}, cyclic=True),
+            tau=-1, D=5)
+            t.sweep(tau=-1)
+            peps = t.state
+            peps /= peps.norm()
 
-    with open(f"PEPS_log{Lx}{Ly}.txt", "a") as file:
-        file.write(f"Layer {i}/{len(Vlist)} applied \n")
+        with open(f"PEPS_log{Lx}{Ly}.txt", "a") as file:
+            file.write(f"Layer {i}/{len(Vlist)} applied \n")
 
 f = quimb.fidelity(peps.to_dense()[:, 0], sv)
 with open(f"PEPS_log{Lx}{Ly}.txt", "a") as file:
