@@ -48,22 +48,6 @@ perms_ext_reduced = [perms_v]*3  + [perms_h]*3 + [perms_v]*3
 map_ = {i: (i//Ly, i%Lx) for i in range(L)}
 
 
-peps = qtn.PEPS.rand(Lx, Ly, bond_dim=1, phys_dim=2, cyclic=True)
-peps /= peps.norm()
-
-peps_trotter = trotter(peps.copy(), 0.25, L, Lx, Ly, J, g, perms_v, perms_h, trotter_order=order,
-    dt=0.25/nsteps, max_bond_dim=max_bond_dim_T, lower_max_bond_dim=lower_max_bond_dim_T, treshold=treshold_T)
-peps_ccU = ccU(peps.copy(), Vlist, perms_extended, control_layers, 
-    dagger=False, max_bond_dim=max_bond_dim_C, lower_max_bond_dim=lower_max_bond_dim_C, treshold=treshold_C)
-
-
-f = np.linalg.norm(peps_ccU.overlap(peps_trotter))
-with open(f"combined_PEPS_log{Lx}{Ly}.txt", "a") as file:
-    file.write(f"Fidelity, Forwards \n D_init={max_bond_dim_T}, D_late={lower_max_bond_dim_T}, treshold={treshold_T}, nsteps={nsteps}, order={order} for Trotter \n")
-    file.write(f"D_init={max_bond_dim_C}, D_late={lower_max_bond_dim_C}, treshold={treshold_C} for ccU \n")
-    file.write(f"Fidelity: {f}\n")
-
-
 def trotter(peps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=5, 
             dt=0.1, trotter_order=2, treshold=10, lower_max_bond_dim=4):
     nsteps = np.abs(int(np.ceil(t/dt)))
@@ -118,3 +102,20 @@ def ccU(peps, Vlist, perms_extended, control_layers, dagger=False, max_bond_dim=
                     file.write(f"Step {i} took {time.time() - start:.2f} seconds")
     peps /= peps.norm()
     return peps
+
+
+
+peps = qtn.PEPS.rand(Lx, Ly, bond_dim=1, phys_dim=2, cyclic=True)
+peps /= peps.norm()
+
+peps_trotter = trotter(peps.copy(), 0.25, L, Lx, Ly, J, g, perms_v, perms_h, trotter_order=order,
+    dt=0.25/nsteps, max_bond_dim=max_bond_dim_T, lower_max_bond_dim=lower_max_bond_dim_T, treshold=treshold_T)
+peps_ccU = ccU(peps.copy(), Vlist, perms_extended, control_layers, 
+    dagger=False, max_bond_dim=max_bond_dim_C, lower_max_bond_dim=lower_max_bond_dim_C, treshold=treshold_C)
+
+
+f = np.linalg.norm(peps_ccU.overlap(peps_trotter))
+with open(f"combined_PEPS_log{Lx}{Ly}.txt", "a") as file:
+    file.write(f"Fidelity, Forwards \n D_init={max_bond_dim_T}, D_late={lower_max_bond_dim_T}, treshold={treshold_T}, nsteps={nsteps}, order={order} for Trotter \n")
+    file.write(f"D_init={max_bond_dim_C}, D_late={lower_max_bond_dim_C}, treshold={treshold_C} for ccU \n")
+    file.write(f"Fidelity: {f}\n")
