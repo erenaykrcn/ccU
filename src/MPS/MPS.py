@@ -30,29 +30,29 @@ def trotter(mps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=N
                 for j in range(len(perm)//2):
                     mps = apply_localGate(mps, V, perm[2*j], perm[2*j+1], max_bond_dim=max_bond_dim)
                     gates += 1
-                    with open("trotter_log.txt", "a") as file:
+                    with open(f"trotter{Lx}{Ly}_log.txt", "a") as file:
                         file.write(f"Gate {gates} \n")
 
-            with open("trotter_log.txt", "a") as file:
+            with open(f"trotter{Lx}{Ly}_log.txt", "a") as file:
                 file.write(f"\n Normalization starting \n")
             mps = right_normalize(mps)
-            with open("trotter_log.txt", "a") as file:
+            with open(f"trotter_log{Lx}{Ly}.txt", "a") as file:
                 file.write(f"Normalization finished \n")
 
             for perm in perms_v:
                 for j in range(len(perm)//2):
                     mps = apply_localGate(mps, V, perm[2*j], perm[2*j+1], max_bond_dim=max_bond_dim)
                     gates += 1
-                    with open("trotter_log.txt", "a") as file:
+                    with open(f"trotter_log{Lx}{Ly}.txt", "a") as file:
                         file.write(f"Gate {gates} \n")
                     
-            with open("trotter_log.txt", "a") as file:
+            with open(f"trotter_log{Lx}{Ly}.txt", "a") as file:
                 file.write(f"Normalization starting \n")
             mps = right_normalize(mps)
-            with open("trotter_log.txt", "a") as file:
+            with open(f"trotter_log{Lx}{Ly}.txt", "a") as file:
                 file.write(f"Normalization finished \n")
 
-            with open("trotter_log.txt", "a") as file:
+            with open(f"trotter_log{Lx}{Ly}.txt", "a") as file:
                 file.write(f"Time step {n}/{nsteps}, layer {layer}/{len(Vlist_start)} applied \n")
     return mps
 
@@ -74,7 +74,7 @@ def ccU(mps, L, Vlist, Xlists_opt, perms, perms_qc, control_layers, max_bond_dim
                     mps = apply_localGate(mps, V, perm[2*j]+1, perm[2*j+1]+1, max_bond_dim=max_bond_dim)
             mps = right_normalize(mps)
 
-        with open("ccU_log.txt", "a") as file:
+        with open(f"ccU_log{Lx}{Ly}.txt", "a") as file:
             file.write(f"Layer {i}/{len(Vlist)} applied \n")
     mps = apply_localGate(mps, np.kron(X, I2), 0, 1, max_bond_dim=max_bond_dim)
 
