@@ -9,3 +9,13 @@ Fidelity: 0.937736589559601
 D_init=3, D_late=3, treshold=8 for ccU 
 Fidelity: 1.0058179982869513
  
+
+ ccU Fidelity, Backwards 
+ D_init=3, D_late=3, treshold=10, nsteps=10, order=2 for (exact) Trotter 
+D_init=3, D_late=3, treshold=8 for ccU 
+Err Z: 0.013198800033910024; Err X: 0.024248790446069868
+
+ Trotter nsteps=2 Fidelity, Backwards 
+Err Z: 0.013198800033910024; Err X: 0.024248790446069868
+ 
+ 

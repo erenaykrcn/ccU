@@ -203,4 +203,4 @@ err_Z_T = np.abs(Z_T-Z_EXACT)
 
 with open(f"combined_PEPS_log{Lx}{Ly}.txt", "a") as file:
     file.write(f"\n Trotter nsteps={nsteps} Fidelity, Backwards \n")
-    file.write(f"Err Z: {err_Z_ccU}; Err X: {err_X_ccU}\n \n \n")
+    file.write(f"Err Z: {err_Z_T}; Err X: {err_X_T}\n \n \n")
