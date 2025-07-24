@@ -84,7 +84,7 @@ def trotter(peps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=
             with open(f"trotter_PEPS_log{Lx}{Ly}.txt", "a") as file:
                 file.write(f"Time step {n}/{nsteps}, layer {layer}/{len(Vlist_start)} applied \n")
 
-    #peps /= peps.norm()
+    peps /= peps.norm()
     return peps
 
 
@@ -101,7 +101,7 @@ def ccU(peps, Vlist, perms_extended, control_layers, dagger=False, max_bond_dim=
                 peps = t.state
                 with open(f"ccU_PEPS_log{Lx}{Ly}.txt", "a") as file:
                     file.write(f"Step {i} took {time.time() - start:.2f} seconds")
-    #peps /= peps.norm()
+    peps /= peps.norm()
     return peps
 
 
