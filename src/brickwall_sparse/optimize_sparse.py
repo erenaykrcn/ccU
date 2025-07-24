@@ -109,10 +109,9 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
             for v in random_svs:
                 e += np.linalg.norm(ansatz_sparse(vlist, L, perms, v) - expm_multiply(1j * t * hamil, v), ord=2) 
                 e += np.linalg.norm(ansatz_sparse(vlist_reduced, L, perms_reduced, v) - expm_multiply(-1j * t * hamil, v), ord=2)
+                
             with open("log.txt", "a") as file:
                 file.write(f"Error {e/(2*rS)}\n")
-
-
             print("Current error: ", e/(2*rS))
             return e/(2*rS)
 
