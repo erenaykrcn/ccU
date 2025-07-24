@@ -16,10 +16,10 @@ import tracemalloc
 import os
 tracemalloc.start()
 
-max_bond_dim_T, lower_max_bond_dim_T, treshold_T = (6, 4, 10)
-max_bond_dim_C, lower_max_bond_dim_C, treshold_C = (5, 4, 8)
-#max_bond_dim_T, lower_max_bond_dim_T, treshold_T = (3, 3, 10)
-#max_bond_dim_C, lower_max_bond_dim_C, treshold_C = (3, 3, 8)
+#max_bond_dim_T, lower_max_bond_dim_T, treshold_T = (6, 4, 10)
+#max_bond_dim_C, lower_max_bond_dim_C, treshold_C = (5, 4, 8)
+max_bond_dim_T, lower_max_bond_dim_T, treshold_T = (3, 3, 10)
+max_bond_dim_C, lower_max_bond_dim_C, treshold_C = (3, 3, 8)
 
 nsteps, order = (8, 2)                
 Vlist = []
@@ -142,8 +142,11 @@ if not os.path.isfile(f'./PEPS/ccU_PEPS_D_init={max_bond_dim_C}_D_late={lower_ma
 #f = np.linalg.norm(peps_ccU.overlap(peps_trotter,  contract='auto-hq'))
 block_sites = [(2,2), (2,3), (3,2), (3,3)]
 rho_trotter = peps_trotter.partial_trace(block_sites, optimize='auto-hq', max_bond=lower_max_bond_dim_T)
+rho_trotter = 0.5 * (rho_trotter + rho_trotter.conj().T)
 rho_trotter /= np.trace(rho_trotter)
+
 rho_ccU = peps_ccU.partial_trace(block_sites, optimize='auto-hq', max_bond=lower_max_bond_dim_C)
+rho_ccU = 0.5 * (rho_ccU + rho_ccU.conj().T)
 rho_ccU /= np.trace(rho_ccU)
 
 f = np.abs(np.trace(rho_ccU.conj().T @ rho_trotter))
