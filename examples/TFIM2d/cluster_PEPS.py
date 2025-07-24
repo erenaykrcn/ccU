@@ -83,7 +83,6 @@ def trotter(peps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=
                 peps = t.state
             with open(f"trotter_PEPS_log{Lx}{Ly}.txt", "a") as file:
                 file.write(f"Time step {n}/{nsteps}, layer {layer}/{len(Vlist_start)} applied \n")
-
     peps /= peps.norm()
     return peps
 
@@ -139,10 +138,14 @@ if not os.path.isfile(f'./PEPS/ccU_PEPS_D_init={max_bond_dim_C}_D_late={lower_ma
             inds_ascii = [ind.encode('ascii', 'ignore') for ind in t.inds]
             dset.attrs['inds'] = inds_ascii
 
+
 #f = np.linalg.norm(peps_ccU.overlap(peps_trotter,  contract='auto-hq'))
 block_sites = [(2,2), (2,3), (3,2), (3,3)]
 rho_trotter = peps_trotter.partial_trace(block_sites, optimize='auto-hq', max_bond=lower_max_bond_dim_T)
+rho_trotter /= np.trace(rho_trotter)
 rho_ccU = peps_ccU.partial_trace(block_sites, optimize='auto-hq', max_bond=lower_max_bond_dim_C)
+rho_ccU /= np.trace(rho_ccU)
+
 f = np.abs(np.trace(rho_ccU.conj().T @ rho_trotter))
 
 with open(f"combined_PEPS_log{Lx}{Ly}.txt", "a") as file:
