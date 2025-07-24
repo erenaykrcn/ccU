@@ -16,10 +16,10 @@ import tracemalloc
 import os
 tracemalloc.start()
 
-#max_bond_dim_T, lower_max_bond_dim_T, treshold_T = (5, 4, 10)
-#max_bond_dim_C, lower_max_bond_dim_C, treshold_C = (4, 3, 8)
-max_bond_dim_T, lower_max_bond_dim_T, treshold_T = (3, 3, 10)
-max_bond_dim_C, lower_max_bond_dim_C, treshold_C = (3, 3, 8)
+max_bond_dim_T, lower_max_bond_dim_T, treshold_T = (6, 4, 10)
+max_bond_dim_C, lower_max_bond_dim_C, treshold_C = (5, 4, 8)
+#max_bond_dim_T, lower_max_bond_dim_T, treshold_T = (3, 3, 10)
+#max_bond_dim_C, lower_max_bond_dim_C, treshold_C = (3, 3, 8)
 
 nsteps, order = (8, 2)                
 Vlist = []
