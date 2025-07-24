@@ -20,8 +20,10 @@ tracemalloc.start()
 #max_bond_dim_C, lower_max_bond_dim_C, treshold_C = (5, 4, 8)
 max_bond_dim_T, lower_max_bond_dim_T, treshold_T = (3, 3, 10)
 max_bond_dim_C, lower_max_bond_dim_C, treshold_C = (3, 3, 8)
+nsteps, order = (10, 2)                
 
-nsteps, order = (8, 2)                
+
+
 Vlist = []
 with h5py.File(f"./results/tfim2d_ccU_SPARSE_103_Lx4Ly4_t0.25_layers15_rS1_niter15_3hloc.hdf5", "r") as f:
     Vlist =  f["Vlist"][:]
@@ -117,11 +119,11 @@ if not os.path.isfile(f"./PEPS/init_peps.h5") or True: #TODO: remove this later
 
 
 # Get and save peps_trotter
-if not os.path.isfile(f"./PEPS/trotter_peps_D_init={max_bond_dim_T}_D_late={lower_max_bond_dim_T}_treshold={treshold_T}.h5") or True: #TODO: remove this later
-    peps_trotter = trotter(peps.copy(), -0.25, L, Lx, Ly, J, g, perms_v, perms_h, trotter_order=order,
+if not os.path.isfile(f"./PEPS/trotter_peps_D_init={max_bond_dim_T}_D_late={lower_max_bond_dim_T}_treshold={treshold_T}_nsteps{nsteps}.h5") or True: #TODO: remove this later
+    peps_trotter_EXACT = trotter(peps.copy(), -0.25, L, Lx, Ly, J, g, perms_v, perms_h, trotter_order=order,
         dt=0.25/nsteps, max_bond_dim=max_bond_dim_T, lower_max_bond_dim=lower_max_bond_dim_T, treshold=treshold_T)
-    with h5py.File(f'./PEPS/trotter_peps_D_init={max_bond_dim_T}_D_late={lower_max_bond_dim_T}_treshold={treshold_T}.h5', 'w') as f:
-        for site, t in enumerate(peps_trotter.tensors):
+    with h5py.File(f'./PEPS/trotter_peps_D_init={max_bond_dim_T}_D_late={lower_max_bond_dim_T}_treshold={treshold_T}_nsteps{nsteps}.h5', 'w') as f:
+        for site, t in enumerate(peps_trotter_EXACT.tensors):
             dset_name = f"site_{site}"
             dset = f.create_dataset(dset_name, data=t.data)
             inds_ascii = [ind.encode('ascii', 'ignore') for ind in t.inds]
@@ -140,18 +142,65 @@ if not os.path.isfile(f'./PEPS/ccU_PEPS_D_init={max_bond_dim_C}_D_late={lower_ma
 
 
 #f = np.linalg.norm(peps_ccU.overlap(peps_trotter,  contract='auto-hq'))
-block_sites = [(2,2), (2,3), (3,2), (3,3)]
+"""block_sites = [(2,2), (2,3), (3,2), (3,3)]
 rho_trotter = peps_trotter.partial_trace(block_sites, optimize='auto-hq', max_bond=lower_max_bond_dim_T)
 rho_trotter = 0.5 * (rho_trotter + rho_trotter.conj().T)
 rho_trotter /= np.trace(rho_trotter)
-
 rho_ccU = peps_ccU.partial_trace(block_sites, optimize='auto-hq', max_bond=lower_max_bond_dim_C)
 rho_ccU = 0.5 * (rho_ccU + rho_ccU.conj().T)
 rho_ccU /= np.trace(rho_ccU)
+f = np.abs(np.trace(rho_ccU.conj().T @ rho_trotter))"""
+Z_EXACT = 0
+for i in range(L):
+    Z_EXACT += np.abs(peps_trotter_EXACT.compute_local_expectation({map_[i]: np.array([[1, 0], [0, -1]])}, max_bond=lower_max_bond_dim_T+1))
+Z_EXACT = Z_EXACT/L
+Z_ccU = 0
+for i in range(L):
+    Z_ccU += np.abs(peps_ccU.compute_local_expectation({map_[i]: np.array([[1, 0], [0, -1]])}, max_bond=lower_max_bond_dim_C+1))
+Z_ccU = Z_ccU/L
+err_Z_ccU = np.abs(Z_ccU-Z_EXACT)
 
-f = np.abs(np.trace(rho_ccU.conj().T @ rho_trotter))
+X_EXACT = 0
+for i in range(L):
+    X_EXACT += np.abs(peps_trotter_EXACT.compute_local_expectation({map_[i]: np.array([[0, 1], [1, 0]])}, max_bond=lower_max_bond_dim_T+1))
+X_EXACT = X_EXACT/L
+X_ccU = 0
+for i in range(L):
+    X_ccU += np.abs(peps_ccU.compute_local_expectation({map_[i]: np.array([[0, 1], [1, 0]])}, max_bond=lower_max_bond_dim_C+1))
+X_ccU = X_ccU/L
+err_X_ccU = np.abs(X_ccU-X_EXACT)
+
 
 with open(f"combined_PEPS_log{Lx}{Ly}.txt", "a") as file:
-    file.write(f"\n Fidelity, Backwards \n D_init={max_bond_dim_T}, D_late={lower_max_bond_dim_T}, treshold={treshold_T}, nsteps={nsteps}, order={order} for Trotter \n")
+    file.write(f"\n ccU Fidelity, Backwards \n D_init={max_bond_dim_T}, D_late={lower_max_bond_dim_T}, treshold={treshold_T}, nsteps={nsteps}, order={order} for (exact) Trotter \n")
     file.write(f"D_init={max_bond_dim_C}, D_late={lower_max_bond_dim_C}, treshold={treshold_C} for ccU \n")
-    file.write(f"Fidelity: {f}\n \n")
+    file.write(f"Err Z: {err_Z_ccU}; Err X: {err_X_ccU}\n")
+
+
+nsteps = 2
+# Get and save peps_trotter
+if not os.path.isfile(f"./PEPS/trotter_peps_D_init={max_bond_dim_T}_D_late={lower_max_bond_dim_T}_treshold={treshold_T}_nsteps{nsteps}.h5") or True: #TODO: remove this later
+    peps_trotter = trotter(peps.copy(), -0.25, L, Lx, Ly, J, g, perms_v, perms_h, trotter_order=order,
+        dt=0.25/nsteps, max_bond_dim=max_bond_dim_T, lower_max_bond_dim=lower_max_bond_dim_T, treshold=treshold_T)
+    with h5py.File(f'./PEPS/trotter_peps_D_init={max_bond_dim_T}_D_late={lower_max_bond_dim_T}_treshold={treshold_T}_nsteps{nsteps}.h5', 'w') as f:
+        for site, t in enumerate(peps_trotter.tensors):
+            dset_name = f"site_{site}"
+            dset = f.create_dataset(dset_name, data=t.data)
+            inds_ascii = [ind.encode('ascii', 'ignore') for ind in t.inds]
+            dset.attrs['inds'] = inds_ascii
+
+Z_T = 0
+for i in range(L):
+    Z_T += np.abs(peps_trotter.compute_local_expectation({map_[i]: np.array([[1, 0], [0, -1]])}, max_bond=lower_max_bond_dim_T+1))
+Z_T = Z_T/L
+X_T = 0
+for i in range(L):
+    X_T += np.abs(peps_trotter.compute_local_expectation({map_[i]: np.array([[0, 1], [1, 0]])}, max_bond=lower_max_bond_dim_T+1))
+X_T = X_T/L
+err_X_T = np.abs(X_T-X_EXACT)
+err_Z_T = np.abs(Z_T-Z_EXACT)
+
+
+with open(f"combined_PEPS_log{Lx}{Ly}.txt", "a") as file:
+    file.write(f"\n Trotter nsteps={nsteps} Fidelity, Backwards \n")
+    file.write(f"Err Z: {err_Z_ccU}; Err X: {err_X_ccU}\n \n \n")

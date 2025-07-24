@@ -3,3 +3,9 @@
 D_init=3, D_late=3, treshold=8 for ccU 
 Fidelity: 0.937736589559601
  
+
+ Fidelity, Backwards 
+ D_init=3, D_late=3, treshold=10, nsteps=8, order=2 for Trotter 
+D_init=3, D_late=3, treshold=8 for ccU 
+Fidelity: 1.0058179982869513
+ 
