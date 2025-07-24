@@ -152,21 +152,21 @@ rho_ccU /= np.trace(rho_ccU)
 f = np.abs(np.trace(rho_ccU.conj().T @ rho_trotter))"""
 Z_EXACT = 0
 for i in range(L):
-    Z_EXACT += np.abs(peps_trotter_EXACT.compute_local_expectation({map_[i]: np.array([[1, 0], [0, -1]])}, max_bond=lower_max_bond_dim_T+1))
+    Z_EXACT += np.abs(peps_trotter_EXACT.compute_local_expectation({map_[i]: np.array([[1, 0], [0, -1]])}, max_bond=lower_max_bond_dim_T))
 Z_EXACT = Z_EXACT/L
 Z_ccU = 0
 for i in range(L):
-    Z_ccU += np.abs(peps_ccU.compute_local_expectation({map_[i]: np.array([[1, 0], [0, -1]])}, max_bond=lower_max_bond_dim_C+1))
+    Z_ccU += np.abs(peps_ccU.compute_local_expectation({map_[i]: np.array([[1, 0], [0, -1]])}, max_bond=lower_max_bond_dim_C))
 Z_ccU = Z_ccU/L
 err_Z_ccU = np.abs(Z_ccU-Z_EXACT)
 
 X_EXACT = 0
 for i in range(L):
-    X_EXACT += np.abs(peps_trotter_EXACT.compute_local_expectation({map_[i]: np.array([[0, 1], [1, 0]])}, max_bond=lower_max_bond_dim_T+1))
+    X_EXACT += np.abs(peps_trotter_EXACT.compute_local_expectation({map_[i]: np.array([[0, 1], [1, 0]])}, max_bond=lower_max_bond_dim_T))
 X_EXACT = X_EXACT/L
 X_ccU = 0
 for i in range(L):
-    X_ccU += np.abs(peps_ccU.compute_local_expectation({map_[i]: np.array([[0, 1], [1, 0]])}, max_bond=lower_max_bond_dim_C+1))
+    X_ccU += np.abs(peps_ccU.compute_local_expectation({map_[i]: np.array([[0, 1], [1, 0]])}, max_bond=lower_max_bond_dim_C))
 X_ccU = X_ccU/L
 err_X_ccU = np.abs(X_ccU-X_EXACT)
 
@@ -191,11 +191,11 @@ if not os.path.isfile(f"./PEPS/trotter_peps_D_init={max_bond_dim_T}_D_late={lowe
 
 Z_T = 0
 for i in range(L):
-    Z_T += np.abs(peps_trotter.compute_local_expectation({map_[i]: np.array([[1, 0], [0, -1]])}, max_bond=lower_max_bond_dim_T+1))
+    Z_T += np.abs(peps_trotter.compute_local_expectation({map_[i]: np.array([[1, 0], [0, -1]])}, max_bond=lower_max_bond_dim_T))
 Z_T = Z_T/L
 X_T = 0
 for i in range(L):
-    X_T += np.abs(peps_trotter.compute_local_expectation({map_[i]: np.array([[0, 1], [1, 0]])}, max_bond=lower_max_bond_dim_T+1))
+    X_T += np.abs(peps_trotter.compute_local_expectation({map_[i]: np.array([[0, 1], [1, 0]])}, max_bond=lower_max_bond_dim_T))
 X_T = X_T/L
 err_X_T = np.abs(X_T-X_EXACT)
 err_Z_T = np.abs(Z_T-Z_EXACT)

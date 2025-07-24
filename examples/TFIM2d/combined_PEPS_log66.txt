@@ -15,7 +15,26 @@ Fidelity: 1.0058179982869513
 D_init=3, D_late=3, treshold=8 for ccU 
 Err Z: 0.013198800033910024; Err X: 0.024248790446069868
 
+
+ 
+ 
+
+ ccU Fidelity, Backwards 
+ D_init=3, D_late=3, treshold=10, nsteps=10, order=2 for (exact) Trotter 
+D_init=3, D_late=3, treshold=8 for ccU 
+Err Z: 0.005172357892852281; Err X: 0.00382730211944593
+
  Trotter nsteps=2 Fidelity, Backwards 
-Err Z: 0.013198800033910024; Err X: 0.024248790446069868
+Err Z: 6.383289047795504e-05; Err X: 0.02777616446081621
+ 
+ 
+
+ ccU Fidelity, Backwards 
+ D_init=3, D_late=3, treshold=10, nsteps=10, order=2 for (exact) Trotter 
+D_init=3, D_late=3, treshold=8 for ccU 
+Err Z: 0.0022393503609374754; Err X: 0.004193013518387301
+
+ Trotter nsteps=2 Fidelity, Backwards 
+Err Z: 0.005086498763219038; Err X: 0.017612519195798593
  
  
