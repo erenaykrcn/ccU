@@ -53,7 +53,7 @@ for i, V in enumerate(Vlist):
     if i not in control_layers:
         Vlist_reduced.append(V)
 
-
+Vlist_start = Vlist
 state = random_statevector(2**L).data
 print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(Vlist_start, L, perms_extended, state) - expm_multiply(
     1j * t * hamil, state), ord=2) + np.linalg.norm(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, state) - expm_multiply(
@@ -67,7 +67,7 @@ print('fidelity: ', (state_fidelity(ansatz_sparse(Vlist_start, L, perms_extended
 
 from optimize_sparse import optimize, err
 
-Vlist_start = Vlist
+
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_extended, perms_reduced=perms_ext_reduced, 
                                    control_layers=control_layers, rS=1, niter=10)
 plt.plot(err_iter)
