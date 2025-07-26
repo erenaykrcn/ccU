@@ -76,7 +76,12 @@ print('fidelity: ', (state_fidelity(ansatz_sparse(Vlist_start, L, perms_extended
     1j * t * hamil, state)) + state_fidelity(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, state), expm_multiply(
     -1j * t * hamil, state)))/2)
 
+
+
 from optimize_sparse import optimize, err
+
+with h5py.File("./results/triangularXY_ccU_SPARSE_J111_h3-11_Lx4Ly4_t0.125_layers45_niter5_rS1_2hloc.hdf5", "r") as f:
+    Vlist_start =  f["Vlist"][:]
 
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_extended, perms_reduced=perms_ext_reduced, 
                                    control_layers=control_layers, rS=1, niter=5)
