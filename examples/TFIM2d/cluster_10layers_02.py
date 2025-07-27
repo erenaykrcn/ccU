@@ -56,9 +56,6 @@ perms_ext_reduced = [perms_v]*3  + [perms_h]*3
 control_layers = [0, 4, 5, 9] 			# 4 control layers
 
 
-with h5py.File(f"./results/tfim2d_ccU_SPARSE_103_Lx4Ly4_t0.25_layers10_niter5_rS1_2hloc.hdf5", "r") as f:
-    Vlist_start =  f["Vlist"][:]
-
 # 12 layers with 6 being controlled, 9 parameters in total.
 state = random_statevector(2**L).data
 print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(
