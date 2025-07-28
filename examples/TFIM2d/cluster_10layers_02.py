@@ -20,10 +20,10 @@ from qiskit.quantum_info import random_statevector
 
 Lx, Ly = (4, 4)
 L = Lx*Ly
-t = .2
+t = .25
 latt = qib.lattice.IntegerLattice((Lx, Ly), pbc=True)
 field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
-J, h, g = (1, 0, 3)
+J, h, g = (1, 0, 1)
 hamil = qib.IsingHamiltonian(field, J, h, g).as_matrix()
 eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(hamil, k=10)
 idx = eigenvalues.argsort()
@@ -36,24 +36,21 @@ Z = np.array([[1, 0], [0, -1]])
 Y = np.array([[0, -1j], [1j, 0]])
 I2 = np.array([[1, 0], [0, 1]])
 
-hloc1 = construct_ising_local_term(J, 0, 0, ndim=2)
-hloc2 = g*(np.kron(X, I2)+np.kron(I2, X))/4
+hloc = construct_ising_local_term(J, 0, 0, ndim=2) + g*(np.kron(X, I2)+np.kron(I2, X))/4
+#hloc2 = g*(np.kron(X, I2)+np.kron(I2, X))/4
 
-V1 = scipy.linalg.expm(-1j*t*hloc1/2)
-V2 = scipy.linalg.expm(-1j*t*hloc2)
-V3 = scipy.linalg.expm(-1j*t*hloc1/2)
-V4 = scipy.linalg.expm(-1j*t*hloc2)
+V = scipy.linalg.expm(-1j*t*hloc)
 YZ = np.kron(Y, Z)
 
 perms_v, perms_h = get_perms(Lx, Ly)
 
 
-Vlist_start = [YZ, V1, V2, V1, YZ, YZ, V3, V4, V3, YZ]
-Vlist_reduced = [V1, V2, V1, V3, V4, V3]
-perms_extended = [[perms_v[0]]] + [perms_v]*3 + [[perms_v[0]], [perms_h[0]]] +\
-                    [perms_h]*3 + [[perms_h[0]]]
-perms_ext_reduced = [perms_v]*3  + [perms_h]*3
-control_layers = [0, 4, 5, 9] 			# 4 control layers
+Vlist_start = [YZ, V, YZ, YZ, V, YZ]
+Vlist_reduced = [V, V]
+perms_extended = [[perms_v[0]]] + [perms_v]*1 + [[perms_v[0]], [perms_h[0]]] +\
+                    [perms_h]*1 + [[perms_h[0]]]
+perms_ext_reduced = [perms_v]*1  + [perms_h]*1
+control_layers = [0, 2, 3, 5] 			# 4 control layers
 
 
 # 12 layers with 6 being controlled, 9 parameters in total.

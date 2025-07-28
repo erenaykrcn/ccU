@@ -20,7 +20,7 @@ from qiskit.quantum_info import random_statevector
 
 Lx, Ly = (4, 4)
 L = Lx*Ly
-t = .25
+t = .125
 latt = qib.lattice.IntegerLattice((Lx, Ly), pbc=True)
 field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
 J, h, g = (1, 0, 3)
@@ -58,6 +58,7 @@ control_layers = [0, 4, 5, 9] 			# 4 control layers
 
 with h5py.File(f"./results/tfim2d_ccU_SPARSE_103_Lx4Ly4_t0.25_layers10_niter5_rS1_2hloc.hdf5", "r") as f:
     Vlist_start =  f["Vlist"][:]
+
 
 # 12 layers with 6 being controlled, 9 parameters in total.
 state = random_statevector(2**L).data
