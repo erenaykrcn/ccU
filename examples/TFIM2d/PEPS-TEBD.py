@@ -16,6 +16,7 @@ import time
 import tracemalloc
 tracemalloc.start()
 
+J, h, g = (1, 0, 1)
 
 import rqcopt as oc
 X = np.array([[0, 1], [1, 0]])
