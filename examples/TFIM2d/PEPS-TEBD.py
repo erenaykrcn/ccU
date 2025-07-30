@@ -108,8 +108,19 @@ peps = peps / peps.norm()
 peps_E = peps.copy()
 
 
-peps_E = trotter(peps_E.copy(), 10, L, Lx, Ly, J, g, perms_v, perms_h,
-                     dt=0.1, max_bond_dim=4, lower_max_bond_dim=4, trotter_order=2, imag=True)
+peps_E = trotter(peps_E.copy(), 15, L, Lx, Ly, J, g, perms_v, perms_h,
+                     dt=0.1, max_bond_dim=3, lower_max_bond_dim=3, trotter_order=2, imag=True)
+
+Z = np.array([[1, 0], [0, -1]])
+X = np.array([[0, 1], [1, 0]])
+ZZ1 = J*peps_E.compute_local_expectation({((2, 2), (2, 3)): np.kron(Z, Z)})
+ZZ2 = J*peps_E.compute_local_expectation({((2, 2), (3, 2)): np.kron(Z, Z)})
+gX = g*peps_E.compute_local_expectation({((2, 2)): X})
+e = (ZZ2 + ZZ1 + gX)
+with open(f"PEPS-TEBD_log{Lx}{Ly}.txt", "a") as file:
+    file.write(f"Energy: {e} \n")
+
+
 
 zero = np.array([1, 0])
 one = np.array([0, 1])
@@ -132,9 +143,8 @@ with open(f"PEPS-TEBD_log{Lx}{Ly}.txt", "a") as file:
     file.write(f"{np.abs(peps_product1.overlap(peps_E))**2} \n\n")
 
 
-
-peps_A = run_adiabatic(peps_product1, Lx, Ly, 1, 2, perms_v, perms_h, J_i=J, g_i=0, J_f=J, g_f=g,
-	lower_max_bond_dim=4, max_bond_dim=4)
+peps_A = run_adiabatic(peps_product1, Lx, Ly, 2, 2, perms_v, perms_h, J_i=J, g_i=0, J_f=J, g_f=g,
+	lower_max_bond_dim=3, max_bond_dim=3)
 with open(f"PEPS-TEBD_log{Lx}{Ly}.txt", "a") as file:
     file.write(f"Fidelities with AQC State: \n")
     file.write(f"{np.abs(peps_A.overlap(peps_E))**2} \n\n")
