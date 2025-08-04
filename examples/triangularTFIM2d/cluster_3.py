@@ -60,8 +60,6 @@ Vlist_reduced = [V1, V2, V1]*3
 
 perms_extended = [[perms_1[0]], [perms_2[0]], [perms_3[0]]] + [perms_1]*3 +\
                     [perms_2]*3 + [perms_3]*3 + [[perms_3[0]], [perms_2[0]], [perms_1[0]]] 
-
-
 perms_ext_reduced = [perms_1]*3  + [perms_2]*3 + [perms_3]*3
 control_layers = [0, 1, 2, 12, 13, 14]
 
