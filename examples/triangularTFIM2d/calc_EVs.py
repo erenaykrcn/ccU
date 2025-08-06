@@ -64,6 +64,6 @@ for g in gs:
     idx = eigenvalues.argsort()
     eigenvalues_sort = eigenvalues[idx]
 
-	with open(f"calc_EVs_SA.txt", "a") as file:
-	    file.write(f"\n {eigenvalues_sort[0]}, \n")
+    with open(f"calc_EVs_SA.txt", "a") as file:
+        file.write(f"\n {eigenvalues_sort[0]}, \n")
 
