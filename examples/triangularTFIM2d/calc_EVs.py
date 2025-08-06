@@ -22,13 +22,48 @@ latt = qib.lattice.TriangularLattice((Lx, Ly), pbc=True)
 field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
 J, h = (1, 0)
 
-gs = np.linspace(1.8, 3.5, 50)
-for g in gs:
-	hamil = qib.IsingHamiltonian(field, J, h, g).as_matrix()
-	eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(hamil, k=400)
-	idx = eigenvalues.argsort()
-	eigenvalues_sort = eigenvalues[idx]
-	eigenvectors_sort = eigenvectors[:,idx]
+from itertools import product
+from qiskit import QuantumCircuit
+from qiskit.quantum_info import Statevector
+import numpy as np
 
-	with open(f"calc_EVs_4x4.txt", "a") as file:
-	    file.write(f"\n {eigenvalues_sort[0]} \n")
+
+def eval_energy(config):
+    e = 0
+    for perm in perms_1+perms_2+perms_3:
+        for j in range(len(perm)//2):
+            e += 1 if config[perm[2*j]]==config[perm[2*j+1]] else -1
+    return e
+
+
+e = 48
+gs = '0'*L
+gss = []
+bitstrings = [''.join(bits) for bits in product('01', repeat=16)]
+for bitstring in bitstrings:
+    if eval_energy(bitstring) < e:
+        gs = bitstring
+        e = eval_energy(bitstring)
+    if eval_energy(bitstring) == -16:
+        gss.append(bitstring)
+
+ground_states = gss
+n = len(ground_states[0])
+dim = 2**n
+state = np.zeros(dim, dtype=complex)
+for s in ground_states:
+    index = int(s, 2)
+    state[index] = 1 / np.sqrt(len(ground_states))
+psi = Statevector(state)
+
+
+gs = np.linspace(0, 1.8, 50)
+for g in gs:
+    hamil = qib.IsingHamiltonian(field, J, h, g).as_matrix()
+    eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(hamil, k=5, v0=psi.data, which='SA')
+    idx = eigenvalues.argsort()
+    eigenvalues_sort = eigenvalues[idx]
+
+	with open(f"calc_EVs_SA.txt", "a") as file:
+	    file.write(f"\n {eigenvalues_sort[0]}, \n")
+
