@@ -22,6 +22,11 @@ latt = qib.lattice.TriangularLattice((Lx, Ly), pbc=True)
 field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
 J, h = (1, 0)
 
+perms_1 = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], [1, 2, 3, 0, 5, 6, 7, 4, 9, 10, 11, 8, 13, 14, 15, 12]]
+perms_2 = [[0, 5, 10, 15, 3, 4, 9, 14, 2, 7, 8, 13, 1, 6, 11, 12], [5, 10, 15, 0, 4, 9, 14, 3, 7, 8, 13, 2, 6, 11, 12, 1]]
+perms_3 = [[0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15], [4, 8, 12, 0, 5, 9, 13, 1, 6, 10, 14, 2, 7, 11, 15, 3]]
+
+
 from itertools import product
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Statevector
