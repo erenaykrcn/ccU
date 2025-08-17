@@ -17,9 +17,9 @@ from qiskit.quantum_info import random_statevector
 from optimize_sparse import optimize
 
 
-L = 8
+L = 6
 niter = 200
-ts = [100]
+ts = [.5]
 rS=10
 for t in ts:
     latt = qib.lattice.IntegerLattice((L, ), pbc=True)
