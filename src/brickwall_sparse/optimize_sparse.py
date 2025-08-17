@@ -12,7 +12,7 @@ def err(vlist, Uv, v, L, perms):
     return -np.vdot(Uv, ansatz_sparse(vlist, L, perms, v)).real
 
 
-def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers=[], rS=1, **kwargs):
+def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers=[], rS=1, log=False, **kwargs):
     n = len(Vlist_start)
     indices = []
     for i in range(len(Vlist_start)):
@@ -98,6 +98,11 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
             for v in random_svs:
                 e += np.linalg.norm(ansatz_sparse(vlist, L, perms, v) - expm_multiply(-1j * t * hamil, v), ord=2)
             print("Current error: ", e/rS)
+
+            if log:
+                with open(f"log_layers{n}_t{t}.txt", "a") as file:
+                    file.write(f"Error {e/rS}\n")
+
             return e/rS
         else:
             vlist_reduced = []
