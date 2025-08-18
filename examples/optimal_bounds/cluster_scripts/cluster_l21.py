@@ -1,0 +1,40 @@
+import numpy as np
+import qiskit
+from qiskit.quantum_info import state_fidelity
+from numpy import linalg as LA
+import qib
+import matplotlib.pyplot as plt
+import scipy
+import h5py
+
+import sys
+sys.path.append("../../../src/brickwall_sparse")
+from utils_sparse import construct_ising_local_term, reduce_list, X, I2, get_perms
+from ansatz_sparse import ansatz_sparse
+import rqcopt as oc
+from scipy.sparse.linalg import expm_multiply
+from qiskit.quantum_info import random_statevector
+from optimize_sparse import optimize
+
+
+L = 10
+niter = 800
+ts = [2]
+rS=10
+for t in ts:
+    latt = qib.lattice.IntegerLattice((L, ), pbc=True)
+    field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
+    J, h, g = (1, 0, 3)
+    hamil = qib.IsingHamiltonian(field, J, h, g).as_matrix()
+
+    nlayers=21
+    hloc = construct_ising_local_term(J, 0, 0, ndim=2) + g*(np.kron(X, I2)+np.kron(I2, X))/2
+    V1 = scipy.linalg.expm(-1j*t*hloc/(2*nlayers/3))
+    V2 = scipy.linalg.expm(-1j*t*hloc/(nlayers/3))
+    Vlist_reduced = [V1, V2, V1] * int(nlayers//3)
+    perms = [[[i for i in range(L)]] if i%2==0 else [[i for i in range(1, L)]+[0]] for i in range(len(Vlist_reduced))]
+
+    Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_reduced, perms, rS=rS, niter=niter, log=True)
+    with h5py.File(f".results/t{t}_layers{nlayers}.hdf5", "w") as f:
+        f.create_dataset("Vlist", data=Vlist)
+
