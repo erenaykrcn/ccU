@@ -19,7 +19,7 @@ from optimize_sparse import optimize
 
 L = 6
 niter = 800
-ts = [4]
+ts = [8]
 rS=10
 for t in ts:
     latt = qib.lattice.IntegerLattice((L, ), pbc=True)
