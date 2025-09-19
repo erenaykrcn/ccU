@@ -51,6 +51,7 @@ def cU_ansatz_bare(Xs, perms):
         ret_tensor = applyG_tensor(V, ret_tensor, k, l)
     return ret_tensor.reshape((2**L, 2**L))
 
+
 def cU_grad_bare(cU, Xs, perms, flatten=True, unprojected=False):
     L = 3
     Vs = Xs

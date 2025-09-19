@@ -14,7 +14,7 @@ import rqcopt as oc
 def estimate_phases(L, prepared_state, eigenvalues_sort, t, tau,
     shots, depolarizing_error, qc_cU, return_counts=False, mid_cbits=0, 
     noise_model=None, get_cx=False, qasm=False, init_state=None,
-    delta_tau=None
+    delta_tau=None, sample_system=False,
     ):
     backend = qiskit.Aer.get_backend("aer_simulator")
 
@@ -37,7 +37,7 @@ def estimate_phases(L, prepared_state, eigenvalues_sort, t, tau,
     print("nsteps: ", nsteps)
     for n in range(nsteps):
         qc_cU_ins.append(qc_cU.to_gate(), [i for i in range(L+1)])
-    qpe_real, qpe_imag = qc_QPE(L, state, qc_cU_ins, mid_cbits=mid_cbits)
+    qpe_real, qpe_imag = qc_QPE(L, state, qc_cU_ins, sample_system=sample_system, mid_cbits=mid_cbits)
 
     count_ops = 0
     if get_cx:
@@ -49,8 +49,10 @@ def estimate_phases(L, prepared_state, eigenvalues_sort, t, tau,
         counts_real = execute(transpile(qpe_real), backend, noise_model=noise_model, shots=shots).result().get_counts()
         counts_imag = execute(transpile(qpe_imag), backend, noise_model=noise_model, shots=shots).result().get_counts()
     else:
-        counts_real = execute(transpile(qpe_real), backend, noise_model=noise_model, initial_statevector=init_state, shots=shots).result().get_counts()
-        counts_imag = execute(transpile(qpe_imag), backend, noise_model=noise_model, initial_statevector=init_state, shots=shots).result().get_counts()
+        counts_real = execute(transpile(qpe_real), backend, noise_model=noise_model, 
+            initial_statevector=init_state, shots=shots).result().get_counts()
+        counts_imag = execute(transpile(qpe_imag), backend, noise_model=noise_model, 
+            initial_statevector=init_state, shots=shots).result().get_counts()
 
 
     if return_counts:
@@ -81,7 +83,7 @@ def estimate_phases(L, prepared_state, eigenvalues_sort, t, tau,
 
 
 
-def qc_QPE(L, qpe_real, qc_cU, mid_cbits=0):
+def qc_QPE(L, qpe_real, qc_cU, mid_cbits=0, sample_system=False):
     qpe_real.h(L)
     qpe_imag = qpe_real.copy()
     qpe_imag.append(qc_cU.to_gate(), [i for i in range(L+1)])
@@ -89,7 +91,14 @@ def qc_QPE(L, qpe_real, qc_cU, mid_cbits=0):
     qpe_imag.p(-0.5*np.pi, L)
     qpe_imag.h(L)
     qpe_real.h(L)
-    qpe_real.measure(L, mid_cbits)
-    qpe_imag.measure(L, mid_cbits)
+    qpe_real.measure(L, 0)
+    qpe_imag.measure(L, 0)
+
+    if sample_system:
+        qpe_real.h([i for i in range(L)])
+        qpe_real.measure([i for i in range(L)], [i for i in range(1, L+1)])
+        qpe_imag.measure([i for i in range(L)], [i for i in range(1, L+1)])
+
+
     return qpe_real, qpe_imag
 
