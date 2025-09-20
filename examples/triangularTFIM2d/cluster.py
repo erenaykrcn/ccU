@@ -16,9 +16,16 @@ from scipy.sparse.linalg import expm_multiply
 from qiskit.quantum_info import random_statevector
 from scipy.linalg import expm
 
+
+X = np.array([[0, 1], [1, 0]])
+Z = np.array([[1, 0], [0, -1]])
+Y = np.array([[0, -1j], [1j, 0]])
+I2 = np.array([[1, 0], [0, 1]])
+
+
 Lx, Ly = (4, 4)
 L = Lx*Ly
-t = 0.25
+t = 0.125
 # construct Hamiltonian
 latt = qib.lattice.TriangularLattice((Lx, Ly), pbc=True)
 field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
@@ -37,23 +44,8 @@ perms_1 = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], [1, 2, 3, 0, 
 perms_2 = [[0, 5, 10, 15, 3, 4, 9, 14, 2, 7, 8, 13, 1, 6, 11, 12], [5, 10, 15, 0, 4, 9, 14, 3, 7, 8, 13, 2, 6, 11, 12, 1]]
 perms_3 = [[0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15], [4, 8, 12, 0, 5, 9, 13, 1, 6, 10, 14, 2, 7, 11, 15, 3]]
 
-Vlist_3 = [expm(-1j*t*hloc1/2) , expm(-1j*t*hloc2), expm(-1j*t*hloc1/2)]
-Vlist_2 = [expm(-1j*t*hloc1/4), expm(-1j*t*hloc2/2), expm(-1j*t*hloc1/4)]
-Vlist_1 = [expm(-1j*t*hloc1/4), expm(-1j*t*hloc2/2), expm(-1j*t*hloc1/4)]
-Vlist_start    = Vlist_1 + Vlist_2 + Vlist_3 + Vlist_2 + Vlist_1
-perms_extended = [perms_1]*3 + [perms_2]*3 + [perms_3]*3 + [perms_2]*3 + [perms_1]*3
 
 state = np.array(random_statevector(2**L).data)
-print("Trotter error: ", np.linalg.norm(ansatz_sparse(Vlist_start, L, perms_extended, state) - expm_multiply(
-    -1j * t * hamil, state), ord=2))
-
-X = np.array([[0, 1], [1, 0]])
-Z = np.array([[1, 0], [0, -1]])
-Y = np.array([[0, -1j], [1j, 0]])
-I2 = np.array([[1, 0], [0, 1]])
-
-V1 = scipy.linalg.expm(-1j*t*hloc1/2)
-V2 = scipy.linalg.expm(-1j*t*hloc2)
 V = scipy.linalg.expm(-1j*t*hloc)
 YZ = np.kron(Y, Z)
 
@@ -65,7 +57,7 @@ perms_extended = [[perms_1[0]]] + [perms_1] + [[perms_1[0]], [perms_2[0]]] +\
 perms_ext_reduced = [perms_1]  + [perms_2] + [perms_3]
 control_layers = [0, 2, 3, 5, 6, 8]
 
-# 12 layers with 6 being controlled, 9 parameters in total.
+# 9 layers with 6 being controlled.
 state = random_statevector(2**L).data
 print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(Vlist_start, L, perms_extended, state) - expm_multiply(
     1j * t * hamil, state), ord=2) + np.linalg.norm(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, state) - expm_multiply(
