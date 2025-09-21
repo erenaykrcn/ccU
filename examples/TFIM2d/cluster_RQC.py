@@ -1,0 +1,68 @@
+"""
+    (Successful) Attempt for the controlled version:
+"""
+import numpy as np
+import qiskit
+from qiskit.quantum_info import state_fidelity
+from numpy import linalg as LA
+import qib
+import matplotlib.pyplot as plt
+import scipy
+import h5py
+
+import sys
+sys.path.append("../../src/brickwall_sparse")
+from utils_sparse import construct_ising_local_term, reduce_list, X, I2, get_perms
+from ansatz_sparse import ansatz_sparse
+import rqcopt as oc
+from scipy.sparse.linalg import expm_multiply
+from qiskit.quantum_info import random_statevector
+
+Lx, Ly = (4, 4)
+L = Lx*Ly
+t = .125
+latt = qib.lattice.IntegerLattice((Lx, Ly), pbc=True)
+field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
+J, h, g = (1, 0, 1)
+hamil = qib.IsingHamiltonian(field, J, h, g).as_matrix()
+eigenvalues, eigenvectors = scipy.sparse.linalg.eigsh(hamil, k=10)
+idx = eigenvalues.argsort()
+eigenvalues_sort = eigenvalues[idx]
+eigenvectors_sort = eigenvectors[:,idx]
+ground_state = eigenvectors_sort[:, 0]
+
+X = np.array([[0, 1], [1, 0]])
+Z = np.array([[1, 0], [0, -1]])
+Y = np.array([[0, -1j], [1j, 0]])
+I2 = np.array([[1, 0], [0, 1]])
+
+hloc = construct_ising_local_term(J, 0, 0, ndim=2) + g*(np.kron(X, I2)+np.kron(I2, X))/4
+V = scipy.linalg.expm(-1j*t*hloc)
+YZ = np.kron(Y, Z)
+
+perms_v, perms_h = get_perms(Lx, Ly)
+
+Vlist_start = [V, V]
+perms = [perms_v]*1  + [perms_h]*1
+control_layers = []
+
+# 12 layers with 6 being controlled, 9 parameters in total.
+state = random_statevector(2**L).data
+print("Trotter error of the starting point: ", np.linalg.norm(ansatz_sparse(
+    Vlist_start, L, perms, state) - expm_multiply(
+    -1j * t * hamil, state), ord=2) )
+
+from optimize_sparse import optimize, err
+
+Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms, rS=1, niter=10)
+plt.plot(err_iter)
+plt.yscale('log')
+print(err_iter[-1])
+
+
+with h5py.File(f"./tfim2d_RQCOPT_SPARSE_{J}{h}{g}_Lx{Lx}Ly{Ly}_t{t}_layers{len(Vlist_start)}_niter8_rS1_2hloc.hdf5", "w") as f:
+    f.create_dataset("Vlist", data=Vlist)
+    f.create_dataset("f_iter", data=f_iter)
+    f.create_dataset("err_iter", data=err_iter)
+    f.attrs["L"] = L
+    f.attrs["t"] = float(t)
