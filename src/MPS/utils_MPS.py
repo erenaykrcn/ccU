@@ -13,7 +13,6 @@ def left_normalize(Ms):
         A = np.reshape(U, [d, chi1, -1])   
         As.append(A)                        
         T = np.diag(S) @ Vh                 
-
     # Keep leftover signs (but no normalization)
     As[0] = As[0]*np.sign(T)
     return As
@@ -170,7 +169,6 @@ def apply_two_site_operator(mps, gate, site, max_bond_dim=None, cutoff=1e-10):
 
     # SVD
     U, S, Vh = safe_svd(theta, full_matrices=False)
-    
     # Truncate
     keep = np.where(S > cutoff)[0]
     if max_bond_dim is not None:
@@ -208,4 +206,108 @@ def apply_localGate(mps, op, k, l, max_bond_dim=None):
         mps = apply_two_site_operator(mps, SWAP, i)
     
     return mps
+
+
+def decompose_two_site_gate(gate, tol=1e-12):
+    gate = gate.reshape([2, 2, 2, 2]).transpose([0, 2, 1, 3]).reshape(4, 4)
+    d = 2
+    U, S, Vh = np.linalg.svd(gate, full_matrices=False)
+    A_list = []
+    B_list = []
+    for alpha in range(len(S)):
+        vecA = U[:, alpha] * S[alpha]
+        vecB = Vh[alpha, :]
+        A = vecA.reshape(d, d)
+        B = vecB.reshape(d, d)
+        A_list.append(A)
+        B_list.append(B)
+    return A_list, B_list
+
+
+def make_long_range_mpo(L, k, l, gate, tol=1e-12):
+    SWAP = [[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]
+    if k == l:
+        raise ValueError("Sites k and l must be different")
+    if k > l:
+        k, l = l, k
+        gate = SWAP @ gate @ SWAP
+    d = 2
+    Id = np.eye(d, dtype=complex)
+    mpo = []
+    
+    A_list, B_list = decompose_two_site_gate(gate.copy(), tol=tol)
+    r = len(A_list) # rank of the gate.
+        
+    for i in range(L):
+        if i < k or i > l:
+            # trivial identity tensor, bond dimension 1
+            W = Id.reshape(1, 1, d, d)
+        elif i == k:
+            # left endpoint: shape (1, r, d, d)
+            W = np.zeros((1, r, d, d), dtype=complex)
+            for alpha, A in enumerate(A_list):
+                W[0, alpha, :, :] = A
+        elif i == l:
+            # right endpoint: shape (r, 1, d, d)
+            W = np.zeros((r, 1, d, d), dtype=complex)
+            for alpha, B in enumerate(B_list):
+                W[alpha, 0, :, :] = B
+        else:
+            # intermediate sites between k and l: carry label alpha with identity
+            W = np.zeros((r, r, d, d), dtype=complex)
+            for alpha in range(r):
+                W[alpha, alpha, :, :] = Id
+        mpo.append(W)
+    return mpo
+
+def mpo_to_full_matrix(mpo):
+    L = len(mpo)
+    M = mpo[0].reshape([mpo[0].shape[1], 2, 2]).transpose([1, 0, 2]).transpose([0, 2, 1])
+    for i, W in enumerate(mpo[1:]):
+        W = W.transpose([2, 3, 0, 1])
+        M = np.tensordot(M, W, axes=((i+1)*2, 2))
+    upper = list(range(0, 2*L, 2))
+    lower = list(range(1, 2*L, 2))
+    perm = upper + lower
+    M = M.reshape(2*L*[2])
+    T_perm = M.transpose(perm)
+    d = M.shape[0]
+    T_mat = T_perm.reshape(d**L, d**L)
+    return T_mat
+
+
+def apply_mpo_to_mps(mpo, mps, max_bond_dim=None, cutoff=1e-10):
+    L = len(mps)
+    assert len(mpo) == L
+    new_mps = []
+
+    T = np.ones((1, 1), dtype=complex)
+    for M, W in zip(mps, mpo):
+        e = np.tensordot(W, M, axes=(3, 0))
+        e = np.transpose(e, (2,3,0,1,4))
+        e = np.transpose(e, (0, 1, 2, 4, 3))
+        s, a, b, c, d = e.shape
+        e = e.reshape([s, a*b, c*d])
+        
+        e = np.tensordot(T, e, axes=(1, 1)).transpose([1, 0, 2])
+        s, Dl, Dr = e.shape
+        e = e.reshape([s*Dl, Dr])
+        U, S, Vh = safe_svd(e)
+
+        keep = np.where(S > cutoff)[0]
+        if max_bond_dim is not None:
+            keep = keep[:max_bond_dim]
+        U = U[:, keep]
+        S = S[keep]
+        Vh = Vh[keep, :]
+        # Rebuild A1 and A2
+        new_D = len(S)
+        U = U.reshape(s, Dl, new_D)
+        T = (np.diag(S)@Vh)
+
+        new_mps.append(U)    
+    return left_normalize(new_mps)
+    
+
+
 

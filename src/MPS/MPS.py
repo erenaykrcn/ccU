@@ -1,6 +1,5 @@
 import numpy as np
-from utils_MPS import (random_mps, apply_localGate, apply_two_site_operator, 
-                        mps_to_state_vector, get_mps_of_sv, mps_fidelity, right_normalize)
+from utils_MPS import *
 import scipy
 
 import sys
@@ -57,7 +56,7 @@ def trotter(mps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=N
     return mps
 
 
-def ccU(mps, L, Vlist, Xlists_opt, perms, perms_qc, control_layers, max_bond_dim=None):
+def ccU(mps, L, Vlist, Xlists_opt, perms, perms_qc, control_layers, max_bond_dim=None, swap=False):
     mps = apply_localGate(mps, np.kron(X, I2), 0, 1, max_bond_dim=max_bond_dim)
     for i, V in enumerate(Vlist):
         layer = i
@@ -66,15 +65,27 @@ def ccU(mps, L, Vlist, Xlists_opt, perms, perms_qc, control_layers, max_bond_dim
                 for j in range(L//2):
                     mapp = {0: 0, 1: perm[2*j]+1, 2:perm[2*j+1]+1}
                     for l, G in enumerate(Xlists_opt[i]):
-                        mps = apply_localGate(mps, G, mapp[perms_qc[l][0]], mapp[perms_qc[l][1]], max_bond_dim=max_bond_dim)
-            mps = right_normalize(mps)
+                        if swap:
+                            mps = apply_localGate(mps, G, mapp[perms_qc[l][0]], 
+                                mapp[perms_qc[l][1]], max_bond_dim=max_bond_dim)
+                        else:
+                            mpo = make_long_range_mpo(L+1, mapp[perms_qc[l][0]], 
+                                mapp[perms_qc[l][1]], G)
+                            mps = apply_mpo_to_mps(mpo, mps, max_bond_dim=max_bond_dim)
+                            
+            #mps = right_normalize(mps)
         else:
             for perm in perms[layer]:
                 for j in range(len(perm)//2):
-                    mps = apply_localGate(mps, V, perm[2*j]+1, perm[2*j+1]+1, max_bond_dim=max_bond_dim)
-            mps = right_normalize(mps)
+                    if swap:
+                        mps = apply_localGate(mps, V, perm[2*j]+1, perm[2*j+1]+1, 
+                            max_bond_dim=max_bond_dim)
+                    else:
+                        mpo = make_long_range_mpo(L+1, perm[2*j]+1, perm[2*j+1]+1, V)
+                        mps = apply_mpo_to_mps(mpo, mps, max_bond_dim=max_bond_dim)
+            #mps = right_normalize(mps)
 
-        with open(f"ccU_log{Lx}{Ly}.txt", "a") as file:
+        with open(f"ccU_log.txt", "a") as file:
             file.write(f"Layer {i}/{len(Vlist)} applied \n")
     mps = apply_localGate(mps, np.kron(X, I2), 0, 1, max_bond_dim=max_bond_dim)
 
