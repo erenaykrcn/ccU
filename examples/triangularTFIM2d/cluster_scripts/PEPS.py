@@ -205,6 +205,11 @@ def trotter(peps, t, L, Lx, Ly, J, g, perms, dag=False,
                            )
                 t.sweep(tau=-1)
                 peps = t.state
+                peps = peps.contract_compressed(
+                    max_bond=BD,
+                    cutoff=1e-10,
+                    equalize_norms=True
+                )
 
     return peps
 
