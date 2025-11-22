@@ -28,7 +28,7 @@ tracemalloc.start()
 
 BD = 3
 nsteps = 2
-chi_overlap = 3
+chi_overlap = 10
 
 J, h, g = (1, 0, 3)
 Lx, Ly = (4, 4)
@@ -286,7 +286,7 @@ ov_tn = peps_E.make_overlap(
 
 
 overlap_approx = ov_tn.contract_compressed(
-    optimize="greedy",  # preset strategy name understood via cotengra
+    optimize="hyper-compressed",  # preset strategy name understood via cotengra
     max_bond=chi_overlap,
     cutoff=1e-10,
     # leave strip_exponent=False (default) so we just get a scalar back
@@ -300,7 +300,7 @@ ov_tn = peps_E.make_overlap(
     layer_tags=("KET", "BRA"),
 )
 overlap_approx = ov_tn.contract_compressed(
-    optimize="greedy",  # preset strategy name understood via cotengra
+    optimize="hyper-compressed",  # preset strategy name understood via cotengra
     max_bond=chi_overlap,
     cutoff=1e-10,
     # leave strip_exponent=False (default) so we just get a scalar back
