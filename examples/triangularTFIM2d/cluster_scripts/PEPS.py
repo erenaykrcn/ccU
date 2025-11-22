@@ -106,6 +106,24 @@ import quimb as qu
 import quimb.tensor as qtn
 
 
+def _edges_from_permutations(perms_1, perms_2, perms_3):
+    """
+    Take the three [src, tgt] permutation pairs and return a sorted list of
+    unique undirected edges (i, j) with i < j.
+    """
+    edge_set = set()
+
+    for perms in (perms_1, perms_2, perms_3):
+        src, tgt = perms
+        for a, b in zip(src, tgt):
+            if a == b:
+                continue
+            i, j = sorted((a, b))
+            edge_set.add((i, j))
+
+    return sorted(edge_set)
+
+
 def build_triangular_PEPS(Lx, Ly, bond_dim, phys_dim=2,
                           seed=None, dtype="complex128"):
     """
@@ -121,6 +139,7 @@ def build_triangular_PEPS(Lx, Ly, bond_dim, phys_dim=2,
         perms : (perms_1, perms_2, perms_3)
             The three permutation pairs used to define the triangular NN bonds.
     """
+
     # 2. convert to a set of unique graph edges
     edges = _edges_from_permutations(perms_1, perms_2, perms_3)
 
