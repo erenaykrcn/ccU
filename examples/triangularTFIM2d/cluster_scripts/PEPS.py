@@ -6,6 +6,10 @@ import qib
 import matplotlib.pyplot as plt
 import scipy
 import h5py
+import scipy.linalg
+import time
+import rqcopt as oc
+from quimb.tensor.tensor_arbgeom_tebd import LocalHamGen, TEBDGen, edge_coloring
 
 import sys
 sys.path.append("../../../src/brickwall_sparse")
@@ -22,6 +26,10 @@ import time
 import tracemalloc
 tracemalloc.start()
 
+BD = 3
+nsteps = 2
+chi_overlap = 3
+
 J, h, g = (1, 0, 3)
 Lx, Ly = (4, 4)
 L = Lx*Ly
@@ -36,17 +44,33 @@ perms_2 = [[0, 5, 10, 15, 3, 4, 9, 14, 2, 7, 8, 13, 1, 6, 11, 12], [5, 10, 15, 0
 perms_3 = [[0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15], [4, 8, 12, 0, 5, 9, 13, 1, 6, 10, 14, 2, 7, 11, 15, 3]]
 
 
-import numpy as np
-import scipy.linalg
-import time
-import rqcopt as oc
+Vlists = {}
+for t in [0.125]:
+    with h5py.File(f'../results/triangularTFIM_ccU_SPARSE_10{g}_Lx4Ly4_t{t}_layers9_niter10_rS1_2hloc.hdf5') as f:
+        Vlists[t]  =  f["Vlist"][:]
+perms_extended = [[perms_1[0]]] + [perms_1] + [[perms_1[0]], [perms_2[0]]] +\
+                    [perms_2] + [[perms_2[0]], [perms_3[0]]] + [perms_3] + [[perms_3[0]]] 
+perms_ext_reduced = [perms_1]  + [perms_2] + [perms_3]
+control_layers = [0, 2, 3, 5, 6, 8]
+
+
+
 
 # Pauli and identity
 X = np.array([[0, 1], [1, 0]])
 Z = np.array([[1, 0], [0, -1]])
 I2 = np.eye(2)
 
-from quimb.tensor.tensor_arbgeom_tebd import LocalHamGen, TEBDGen, edge_coloring
+
+def layer_from_flat_perm(perm_row, L):
+    """perm_row is a flat list of length L."""
+    return [(perm_row[2*j], perm_row[2*j+1]) for j in range(L // 2)]
+layers_raw = [
+    perms_1[0], perms_1[1],
+    perms_2[0], perms_2[1],
+    perms_3[0], perms_3[1],
+]
+perms_for_trotter = [layer_from_flat_perm(row, L) for row in layers_raw]
 
 import numpy as np
 import quimb as qu
@@ -167,15 +191,14 @@ def build_triangular_PEPS(Lx, Ly, bond_dim, phys_dim=2,
     return tn, (perms_1, perms_2, perms_3)
 
 
+import gc
+
+
+
 def trotter(peps, t, L, Lx, Ly, J, g, perms, dag=False,
                       max_bond_dim=5, dt=0.1, trotter_order=2):
-    """
-    Perform a Trotter‐evolution on `peps` using an arbitrary‐geometry TEBD.
-    `perms` is a list of lists of site‐pairs (i,j) specifying each layer’s two‐site interactions.
-    """
     # Number of steps
     nsteps = abs(int(np.ceil(t / dt)))
-    print("Trotter steps:", nsteps)
     dt = t / nsteps
 
     # Suzuki splitting
@@ -186,7 +209,7 @@ def trotter(peps, t, L, Lx, Ly, J, g, perms, dag=False,
         indices, coeffs = [0, 1], [1, 1]
 
     
-    hloc1 = g*(np.kron(X, I2)+np.kron(I2, X))/4
+    hloc1 = g*(np.kron(X, I2)+np.kron(I2, X))/6
     hloc2 = J*np.kron(Z, Z)
     hlocs = (hloc1, hloc2)
     Vlist_start = []
@@ -197,32 +220,36 @@ def trotter(peps, t, L, Lx, Ly, J, g, perms, dag=False,
         for layer, V in enumerate(Vlist_start):
             i = n*len(Vlist_start)+layer
             for perm in perms:
-                ordering = {(perm[2*j], perm[2*j+1]): V for j in range(L//2)}
-                start = time.time()
-                t = TEBDGen(peps, ham=LocalHam2D(Lx, Ly, ordering, cyclic=True),
-                    tau=-1, D=max_bond_dim, 
-                            #chi=1
-                           )
-                t.sweep(tau=-1)
-                peps = t.state
-                peps = peps.contract_compressed(
-                    optimize="auto-hq",
-                    max_bond=max_bond_dim,
-                    cutoff=1e-9,
-                    equalize_norms=True,
-                )
+                #ordering = {(perm[2*j], perm[2*j+1]): V for j in range(L//2)}
+                #start = time.time()
+                
+                edges = [(perm[2*j], perm[2*j+1]) for j in range(L // 2)]
+                H2 = {edge: V for edge in edges}
+                ham = LocalHamGen(H2=H2, H1=None)
+                tebd = TEBDGen(peps, ham=ham, D=max_bond_dim)
+                tebd.sweep(tau=-1)
+                peps = tebd.state
+
+                del tebd, ham
+                gc.collect()
     return peps
 
 
-def layer_from_flat_perm(perm_row, L):
-    """perm_row is a flat list of length L."""
-    return [(perm_row[2*j], perm_row[2*j+1]) for j in range(L // 2)]
-layers_raw = [
-    perms_1[0], perms_1[1],
-    perms_2[0], perms_2[1],
-    perms_3[0], perms_3[1],
-]
-perms_for_trotter = [layer_from_flat_perm(row, L) for row in layers_raw]
+def ccU(peps, Vlist, perms_extended, control_layers, dagger=False, max_bond_dim=10):
+    for i, V in enumerate(Vlist):
+        if dagger or i not in control_layers:
+            perms = perms_extended[i]
+            for perm in perms:
+                edges = [(perm[2*j], perm[2*j+1]) for j in range(L // 2)]
+                H2 = {edge: scipy.linalg.logm(V) for edge in edges}
+                ham = LocalHamGen(H2=H2, H1=None)
+                tebd = TEBDGen(peps, ham=ham, D=max_bond_dim)
+                tebd.sweep(tau=-1)
+                peps = tebd.state
+
+                del tebd, ham
+                gc.collect()
+    return peps
 
 
 from qiskit.quantum_info import state_fidelity
@@ -240,25 +267,44 @@ peps_T = peps.copy()
 peps_C = peps.copy()
 
 map_ = {i: (i//Ly, i%Lx) for i in range(L)}
-BD = 3
-nsteps = 2
 peps_E = trotter(peps_E.copy(), t, L, Lx, Ly, J, g, perms_1+perms_2+perms_3,
                      dt=t/nsteps, max_bond_dim=BD, trotter_order=2)
+peps_aE = ccU(peps_C.copy(), Vlist, perms_extended, control_layers, dagger=False,
+                 max_bond_dim=BD)
+peps_T = trotter(peps_T.copy(), t, L, Lx, Ly, J, g, perms_1+perms_2+perms_3,
+                     dt=t/nsteps, max_bond_dim=BD, trotter_order=1)
+
+peps_T.compress_all(max_bond=BD)
+peps_E.compress_all(max_bond=BD)
+peps_aE.compress_all(max_bond=BD)
 
 
-sv1 =  peps_E.to_dense()
-sv1 /= np.linalg.norm(sv1)
-sv2 = peps.to_dense()
-sv2 /= np.linalg.norm(sv2)
+ov_tn = peps_E.make_overlap(
+    peps_aE,
+    layer_tags=("KET", "BRA"),
+)
+
+
+overlap_approx = ov_tn.contract_compressed(
+    optimize="greedy",  # preset strategy name understood via cotengra
+    max_bond=chi_overlap,
+    cutoff=1e-10,
+    # leave strip_exponent=False (default) so we just get a scalar back
+)
 
 with open(f"PEPS_log.txt", "a") as file:
-    file.write("Fidelity for Trotter 2: "+str(np.abs(state_fidelity(
-        sv1, scipy.sparse.linalg.expm_multiply(-1j * t * hamil, sv2) ))))
+    file.write("Fidelity for ccU: "+str(np.abs(overlap_approx)))
 
+ov_tn = peps_E.make_overlap(
+    peps_T,
+    layer_tags=("KET", "BRA"),
+)
+overlap_approx = ov_tn.contract_compressed(
+    optimize="greedy",  # preset strategy name understood via cotengra
+    max_bond=chi_overlap,
+    cutoff=1e-10,
+    # leave strip_exponent=False (default) so we just get a scalar back
+)
 
-
-
-
-
-
-
+with open(f"PEPS_log.txt", "a") as file:
+    file.write("Fidelity for Trotter 1: "+str(np.abs(overlap_approx)))
