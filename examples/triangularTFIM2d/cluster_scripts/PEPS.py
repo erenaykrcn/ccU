@@ -106,80 +106,6 @@ import quimb as qu
 import quimb.tensor as qtn
 
 
-def triangular_permutations(Lx, Ly):
-    """
-    Return three nearest-neighbour permutation pairs for a PBC triangular lattice
-    on an Lx x Ly grid.
-
-    Each perms_k is [src_list, tgt_list], where src_list[i] -> tgt_list[i].
-
-    For Lx == Ly, this exactly reproduces your 4x4 perms_1, perms_2, perms_3
-    (up to the values of Lx, Ly).
-    """
-    def idx(x, y):
-        # row-major site indexing: (x, y) -> i
-        return x * Ly + y
-
-    # --- perms_1: vertical neighbours (x, y) -> (x, y+1) ---
-    p1_src, p1_tgt = [], []
-    for x in range(Lx):
-        for y in range(Ly):
-            p1_src.append(idx(x, y))
-            p1_tgt.append(idx(x, (y + 1) % Ly))
-
-    # --- perms_2: diagonal neighbours (x, y) -> (x+1, y+1) ---
-    p2_src, p2_tgt = [], []
-    if Lx == Ly:
-        # match your 4x4 pattern exactly, generalized to L=Lx=Ly
-        L = Lx
-        # order offsets by 0, L-1, L-2, ..., 1
-        offsets = [0] + list(reversed(range(1, L)))
-        for off in offsets:
-            for x in range(L):
-                y = (x + off) % L
-                p2_src.append(idx(x, y))
-                p2_tgt.append(idx((x + 1) % L, (y + 1) % L))
-    else:
-        # simple, consistent ordering for rectangular case
-        for x in range(Lx):
-            for y in range(Ly):
-                p2_src.append(idx(x, y))
-                p2_tgt.append(idx((x + 1) % Lx, (y + 1) % Ly))
-
-    # --- perms_3: horizontal neighbours (x, y) -> (x+1, y) ---
-    # loop over y then x so that for Lx == Ly we reproduce your 4x4 perms_3.
-    p3_src, p3_tgt = [], []
-    for y in range(Ly):
-        for x in range(Lx):
-            p3_src.append(idx(x, y))
-            p3_tgt.append(idx((x + 1) % Lx, y))
-
-    perms_1 = [p1_src, p1_tgt]
-    perms_2 = [p2_src, p2_tgt]
-    perms_3 = [p3_src, p3_tgt]
-
-    return perms_1, perms_2, perms_3
-
-
-
-def _edges_from_permutations(perms_1, perms_2, perms_3):
-    """
-    Take the three [src, tgt] permutation pairs and return a sorted list of
-    unique undirected edges (i, j) with i < j.
-    """
-    edge_set = set()
-
-    for perms in (perms_1, perms_2, perms_3):
-        src, tgt = perms
-        for a, b in zip(src, tgt):
-            if a == b:
-                continue
-            i, j = sorted((a, b))
-            edge_set.add((i, j))
-
-    return sorted(edge_set)
-
-
 def build_triangular_PEPS(Lx, Ly, bond_dim, phys_dim=2,
                           seed=None, dtype="complex128"):
     """
@@ -195,9 +121,6 @@ def build_triangular_PEPS(Lx, Ly, bond_dim, phys_dim=2,
         perms : (perms_1, perms_2, perms_3)
             The three permutation pairs used to define the triangular NN bonds.
     """
-    # 1. get the three directional permutations
-    perms_1, perms_2, perms_3 = triangular_permutations(Lx, Ly)
-
     # 2. convert to a set of unique graph edges
     edges = _edges_from_permutations(perms_1, perms_2, perms_3)
 
