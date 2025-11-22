@@ -231,8 +231,18 @@ from quimb.tensor.tensor_2d_tebd import TEBD2D, LocalHam2D
 bond_dim = 1
 phys_dim = 2
 peps, (p1, p2, p3) = build_triangular_PEPS(Lx, Ly, bond_dim, phys_dim)
+ov_tn = peps.make_overlap(
+    peps,
+    layer_tags=("KET", "BRA"),
+)
+overlap_approx = ov_tn.contract_compressed(
+    optimize="hyper-compressed",
+    max_bond=chi_overlap,
+    cutoff=1e-10,
+)
+peps /= np.abs(overlap_approx)
 
-peps = peps / peps.norm()
+
 peps_E = peps.copy()
 peps_T = peps.copy()
 peps_C = peps.copy()
