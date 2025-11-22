@@ -240,7 +240,8 @@ overlap_approx = ov_tn.contract_compressed(
     max_bond=chi_overlap,
     cutoff=1e-10,
 )
-peps /= np.abs(overlap_approx)
+norm = np.sqrt(abs(overlap_approx))
+peps = peps/np.abs(norm)
 
 
 peps_E = peps.copy()
