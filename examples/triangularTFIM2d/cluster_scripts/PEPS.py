@@ -52,7 +52,7 @@ perms_extended = [[perms_1[0]]] + [perms_1] + [[perms_1[0]], [perms_2[0]]] +\
                     [perms_2] + [[perms_2[0]], [perms_3[0]]] + [perms_3] + [[perms_3[0]]] 
 perms_ext_reduced = [perms_1]  + [perms_2] + [perms_3]
 control_layers = [0, 2, 3, 5, 6, 8]
-
+Vlist = Vlists[t]
 
 
 
