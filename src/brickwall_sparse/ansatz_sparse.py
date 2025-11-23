@@ -98,9 +98,3 @@ def construct_ccU(L, Vs, Xlists_opt, perms, perms_qc, control_layers):
     qc.x(L)
     return qc
 
-
-
-
-
-
-
