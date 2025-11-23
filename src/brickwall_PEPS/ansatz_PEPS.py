@@ -26,8 +26,8 @@ def ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=1):
         
         def _pair_grad(i):
             with open("GRAD_log.txt", "a") as file:
-            forile.write(f"One call in ansatz_PEPS_grad\n")
-            
+                file.write(f"One call in ansatz_PEPS_grad\n")
+
             v_working = v1.copy()
             k, l = perm[2 * i], perm[2 * i + 1]
             for j in range(i):
