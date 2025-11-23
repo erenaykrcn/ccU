@@ -79,6 +79,7 @@ def compute_overlap(peps1, peps2, chi_overlap):
 def trotter(peps, t, L, Lx, Ly, J, g, perms, dag=False,
                       max_bond_dim=5, dt=0.1, trotter_order=2):
     # Number of steps
+    import numpy as np
     nsteps = abs(int(np.ceil(t / dt)))
     dt = t / nsteps
 
