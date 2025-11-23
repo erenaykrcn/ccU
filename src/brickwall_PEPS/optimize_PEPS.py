@@ -8,7 +8,8 @@ from scipy.sparse.linalg import expm_multiply
 
 
 def optimize_PEPS(L, reference_states, initial_states, t, Vlist_start, perms, max_bond_dim, chi_overlap,
- perms_reduced=None, control_layers=[], log=False, reference_states_back=None, **kwargs):
+ perms_reduced=None, control_layers=[], log=False, reference_states_back=None,
+ n_workers_1=1, n_workers_2=1, **kwargs):
     def compute_overlap(peps1, peps2):
         ov_tn = peps1.make_overlap(
             peps2,
@@ -55,10 +56,11 @@ def optimize_PEPS(L, reference_states, initial_states, t, Vlist_start, perms, ma
 
     def gradfunc(vlist):
         if len(control_layers)==0:
-            g = -ansatz_PEPS_grad_vector(vlist, L, reference_states[0], initial_states[0], perms, max_bond_dim, chi_overlap)
+            g = -ansatz_PEPS_grad_vector(vlist, L, reference_states[0], 
+                initial_states[0], perms, max_bond_dim, chi_overlap, n_workers_1=n_workers_1, n_workers_2=n_workers_2)
             for reference_state, initial_state in zip(reference_states[1:], initial_states[1:]):
                 g += -ansatz_PEPS_grad_vector(vlist, L, reference_state, initial_state, 
-                    perms, max_bond_dim, chi_overlap)
+                    perms, max_bond_dim, chi_overlap, n_workers_1=n_workers_1, n_workers_2=n_workers_2)
             return g
         else:
             vlist_reduced = []
@@ -66,13 +68,13 @@ def optimize_PEPS(L, reference_states, initial_states, t, Vlist_start, perms, ma
                 if i not in control_layers:
                     vlist_reduced.append(V)
 
-            gradfunc1 = -ansatz_PEPS_grad_vector(vlist, L, reference_states_back[0], initial_states[0], perms, max_bond_dim, chi_overlap, flatten=False)
+            gradfunc1 = -ansatz_PEPS_grad_vector(vlist, L, reference_states_back[0], initial_states[0], perms, max_bond_dim, chi_overlap, flatten=False, n_workers_1=n_workers_1, n_workers_2=n_workers_2)
             for reference_state, initial_state in zip(reference_states_back[1:], initial_states[1:]):
-                gradfunc1 += -ansatz_PEPS_grad_vector(vlist, L, reference_state, initial_state, perms, max_bond_dim, chi_overlap, flatten=False)
-            gradfunc2 = -ansatz_PEPS_grad_vector(vlist_reduced, L, reference_states[0], initial_states[0], perms_reduced, max_bond_dim, chi_overlap, flatten=False)
+                gradfunc1 += -ansatz_PEPS_grad_vector(vlist, L, reference_state, initial_state, perms, max_bond_dim, chi_overlap, flatten=False, n_workers_1=n_workers_1, n_workers_2=n_workers_2)
+            gradfunc2 = -ansatz_PEPS_grad_vector(vlist_reduced, L, reference_states[0], initial_states[0], perms_reduced, max_bond_dim, chi_overlap, flatten=False, n_workers_1=n_workers_1, n_workers_2=n_workers_2)
             for reference_state, initial_state in zip(reference_states[1:], initial_states[1:]):
                 gradfunc2 += -ansatz_PEPS_grad_vector(vlist_reduced, L, reference_state, initial_state, 
-                    perms_reduced, max_bond_dim, chi_overlap, flatten=False)
+                    perms_reduced, max_bond_dim, chi_overlap, flatten=False, n_workers_1=n_workers_1, n_workers_2=n_workers_2)
 
             for i, index in enumerate(indices):
                 gradfunc1[index] += gradfunc2[i]
