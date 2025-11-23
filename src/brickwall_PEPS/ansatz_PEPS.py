@@ -65,7 +65,7 @@ def ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=1):
 
 def ansatz_PEPS_grad_vector(Vlist, L, reference_state, state, perms_extended, 
     max_bond_dim, chi_overlap,
-    flatten=True, unprojected=False, n_workers1=1, n_workers2=1):
+    flatten=True, unprojected=False, n_workers_1=1, n_workers_2=1):
     #  |   | -           - |    |
     #  | v | - Brickwall - | Uv |
     #  |   | -           - |    |
@@ -95,10 +95,10 @@ def ansatz_PEPS_grad_vector(Vlist, L, reference_state, state, perms_extended,
         for j in list(range(i+1, len(Vlist)))[::-1]:
             for perm in list(perms_extended[j])[::-1]:
                 w = applyG_block_PEPS(Vlist[j].conj().T, w, L, perm, max_bond_dim)
-        grad = ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=n_workers2)
+        grad = ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=n_workers_2)
         return grad
 
-    with ThreadPoolExecutor(max_workers=n_workers1) as ex:
+    with ThreadPoolExecutor(max_workers=n_workers_1) as ex:
         results = list(ex.map(_single_gate_grad, range(len(Vlist))))
     dVlist = list(results)
 
