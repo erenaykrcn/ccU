@@ -5,7 +5,8 @@ from utils_PEPS import (
 	antisymm_to_real, antisymm, I2, X, Y, Z,
     partial_inner_product, compute_overlap
 	)
-from concurrent.futures import ThreadPoolExecutor
+#from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 
 
 def ansatz_PEPS(Vlist, L, perms, state, max_bond_dim, chi_overlap=10):
@@ -45,7 +46,7 @@ def ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=1):
             v_working /= np.sqrt(compute_overlap(v_working, v_working, chi_overlap))
             T = partial_inner_product(w_working, v_working, k, l, chi_overlap).conj()
             return T
-        with ThreadPoolExecutor(max_workers=n_workers) as ex:
+        with ProcessPoolExecutor(max_workers=n_workers) as ex:
             results = list(ex.map(_pair_grad, range(len(perm) // 2)))
         grad += sum(results)
 
@@ -106,7 +107,7 @@ def ansatz_PEPS_grad_vector(Vlist, L, reference_state, state, perms_extended,
         grad = ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=n_workers_2)
         return grad
 
-    with ThreadPoolExecutor(max_workers=n_workers_1) as ex:
+    with ProcessPoolExecutor(max_workers=n_workers_1) as ex:
         results = list(ex.map(_single_gate_grad, range(len(Vlist))))
     dVlist = list(results)
 
