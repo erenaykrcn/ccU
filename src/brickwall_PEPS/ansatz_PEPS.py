@@ -24,7 +24,7 @@ def ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=1):
         for j in list(range(_+1, len(perms)))[::-1]: # reverse! 
             w1 = applyG_block_PEPS(V.conj().T, w1, L, perms[j], max_bond_dim) # !! -> conj().T
         
-        """def _pair_grad(i):
+        def _pair_grad(i):
             with open("GRAD_log.txt", "a") as file:
                 file.write(f"One call in ansatz_PEPS_grad\n")
 
@@ -40,14 +40,15 @@ def ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=1):
                 v_working = applyG_PEPS(V, v_working, L, k_, l_, max_bond_dim)
 
             # normalize
+            w1 /= np.sqrt(compute_overlap(w1, w1, chi_overlap))
             v_working /= np.sqrt(compute_overlap(v_working, v_working, chi_overlap))
             T = partial_inner_product(w1, v_working, k, l, chi_overlap).conj()
             return T
         with ThreadPoolExecutor(max_workers=n_workers) as ex:
             results = list(ex.map(_pair_grad, range(len(perm) // 2)))
-        grad += sum(results)"""
+        grad += sum(results)
 
-        for i in range(len(perm) // 2):
+        """for i in range(len(perm) // 2):
             v_working = v1.copy()
             k, l = perm[2 * i], perm[2 * i + 1]
             for j in range(i):
@@ -57,10 +58,10 @@ def ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=1):
                 k_, l_ = perm[2 * j], perm[2 * j + 1]
                 v_working = applyG_PEPS(V, v_working, L, k_, l_, max_bond_dim)
 
-            #w1 /= np.sqrt(compute_overlap(w1, w1, chi_overlap))
+            w1 /= np.sqrt(compute_overlap(w1, w1, chi_overlap))
             v_working /= np.sqrt(compute_overlap(v_working, v_working, chi_overlap))
             T = partial_inner_product(w1, v_working, k, l, chi_overlap).conj() # -> conj!
-            grad += T
+            grad += T"""
 
     return grad
 
@@ -74,7 +75,7 @@ def ansatz_PEPS_grad_vector(Vlist, L, reference_state, state, perms_extended,
 
     dVlist = [None for i in range(len(Vlist))]
 
-    for i, V in enumerate(Vlist):
+    """for i, V in enumerate(Vlist):
         perms = perms_extended[i]
         v, w = (state.copy(), reference_state.copy())
         for j in range(i):
@@ -84,9 +85,9 @@ def ansatz_PEPS_grad_vector(Vlist, L, reference_state, state, perms_extended,
             for perm in list(perms_extended[j])[::-1]:
                 w = applyG_block_PEPS(Vlist[j].conj().T, w, L, perm, max_bond_dim)
         grad = ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap)
-        dVlist[i] = grad
+        dVlist[i] = grad"""
 
-    """def _single_gate_grad(i: int):
+    def _single_gate_grad(i: int):
         with open("GRAD_log.txt", "a") as file:
             file.write(f"One call in ansatz_PEPS_grad_vector\n")
 
@@ -106,7 +107,7 @@ def ansatz_PEPS_grad_vector(Vlist, L, reference_state, state, perms_extended,
 
     with ThreadPoolExecutor(max_workers=n_workers_1) as ex:
         results = list(ex.map(_single_gate_grad, range(len(Vlist))))
-    dVlist = list(results)"""
+    dVlist = list(results)
 
     if unprojected:
         return dVlist

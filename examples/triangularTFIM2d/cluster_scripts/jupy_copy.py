@@ -25,18 +25,6 @@ import time
 import tracemalloc
 tracemalloc.start()
 
-from quimb.tensor.tensor_arbgeom_tebd import LocalHamGen, TEBDGen
-import gc
-import quimb as qu
-import quimb.tensor as qtn
-
-BD = 4
-chi_overlap = 8
-nsteps = 1
-niter = 5
-n_workers_1, n_workers_2 = (1, 1)
-
-
 X = np.array([[0, 1], [1, 0]])
 Z = np.array([[1, 0], [0, -1]])
 I2 = np.eye(2)
@@ -45,7 +33,6 @@ J, h, g = (1, 0, 3)
 Lx, Ly = (3, 3)
 L = Lx*Ly
 t = 0.125
-
 # construct Hamiltonian
 latt = qib.lattice.TriangularLattice((Lx, Ly), pbc=True)
 field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
@@ -61,6 +48,9 @@ hloc = hloc1 + hloc2
 V = scipy.linalg.expm(-1j*t*hloc)
 Vlist_start = [V, V, V]
 
+
+from quimb.tensor.tensor_arbgeom_tebd import LocalHamGen, TEBDGen
+import gc
 
 def compute_overlap(peps1, peps2, chi_overlap):
     ov_tn = peps1.make_overlap(
@@ -79,7 +69,6 @@ def compute_overlap(peps1, peps2, chi_overlap):
 def trotter(peps, t, L, Lx, Ly, J, g, perms, dag=False,
                       max_bond_dim=5, dt=0.1, trotter_order=2):
     # Number of steps
-    import numpy as np
     nsteps = abs(int(np.ceil(t / dt)))
     dt = t / nsteps
 
@@ -119,7 +108,10 @@ def trotter(peps, t, L, Lx, Ly, J, g, perms, dag=False,
                 gc.collect()
     return peps
 
-    import numpy as np
+
+import numpy as np
+import quimb as qu
+import quimb.tensor as qtn
 
 
 def _edges_from_permutations(*perm_groups):
@@ -158,6 +150,7 @@ def build_triangular_PEPS(Lx, Ly, bond_dim, phys_dim=2,
     return tn, (perms_1, perms_2, perms_3)
 
 bond_dim, phys_dim = (1, 2)
+chi_overlap = 2
 peps, (p1, p2, p3) = build_triangular_PEPS(Lx, Ly, bond_dim, phys_dim)
 peps_copy_norm = peps.copy()
 ov_tn = peps_copy_norm.make_overlap(
@@ -172,24 +165,28 @@ overlap_approx = ov_tn.contract_compressed(
 norm = np.sqrt(abs(overlap_approx))
 peps = peps/np.abs(norm)
 
+ov_tn = peps.make_overlap(
+    peps,
+    layer_tags=("KET", "BRA"),
+)
+overlap_approx = ov_tn.contract_compressed(
+    optimize="hyper-compressed",
+    max_bond=chi_overlap,
+    cutoff=1e-10,
+)
+
+BD = 4
+nsteps = 1
+
 peps_E = peps.copy()
 peps_E = trotter(peps_E.copy(), t, L, Lx, Ly, J, g, perms_1+perms_2+perms_3,
                      dt=t/nsteps, max_bond_dim=BD, trotter_order=2)
 peps_E.compress_all(max_bond=BD)
-peps_E /= np.sqrt(compute_overlap(peps_E, peps_E, chi_overlap))
+peps_E /= np.sqrt(compute_overlap(peps_E, peps_E, BD+2))
 
 reference_states = [peps_E]
 initial_states = [peps]
 
 Vlist, f_iter, err_iter = optimize_PEPS(L, reference_states, initial_states, t, 
-	Vlist_start, perms_extended, BD, BD+2, log=True, 
-    niter=niter, n_workers_1=n_workers_1, n_workers_2=n_workers_2)
-
-
-with h5py.File(f"./results/triangularTFIM_PEPS_{J}{h}{g}_Lx{Lx}Ly{Ly}_t{t}_layers{len(Vlist_start)}_niter{niter}.hdf5", "w") as f:
-    f.create_dataset("Vlist", data=Vlist)
-    f.create_dataset("f_iter", data=f_iter)
-    f.create_dataset("err_iter", data=err_iter)
-    f.attrs["L"] = L
-    f.attrs["t"] = float(t)
+	Vlist_start, perms_extended, BD, BD+2, niter=5)
 
