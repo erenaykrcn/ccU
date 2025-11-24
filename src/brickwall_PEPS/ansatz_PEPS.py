@@ -26,15 +26,15 @@ def ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=1):
         for j in list(range(_+1, len(perms)))[::-1]: # reverse! 
             w1 = applyG_block_PEPS(V.conj().T, w1, L, perms[j], max_bond_dim) # !! -> conj().T
         
-        with ProcessPoolExecutor(max_workers=n_workers) as ex:
-            results = list(ex.map(pair_grad,
-                range(len(perm) // 2),
-                repeat(L), repeat(v1), repeat(w1), repeat(perm), repeat(V), 
-                repeat(max_bond_dim), repeat(chi_overlap)
-                ))
-        grad += sum(results)
+        #with ProcessPoolExecutor(max_workers=n_workers) as ex:
+        #    results = list(ex.map(pair_grad,
+        #        range(len(perm) // 2),
+        #        repeat(L), repeat(v1), repeat(w1), repeat(perm), repeat(V), 
+        #        repeat(max_bond_dim), repeat(chi_overlap)
+        #        ))
+        #grad += sum(results)
 
-        """for i in range(len(perm) // 2):
+        for i in range(len(perm) // 2):
             v_working = v1.copy()
             k, l = perm[2 * i], perm[2 * i + 1]
             for j in range(i):
@@ -47,7 +47,7 @@ def ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=1):
             w1 /= np.sqrt(compute_overlap(w1, w1, chi_overlap))
             v_working /= np.sqrt(compute_overlap(v_working, v_working, chi_overlap))
             T = partial_inner_product(w1, v_working, k, l, chi_overlap).conj() # -> conj!
-            grad += T"""
+            grad += T
 
     return grad
 

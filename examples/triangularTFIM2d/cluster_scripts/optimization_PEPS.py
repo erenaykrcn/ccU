@@ -37,7 +37,7 @@ if __name__ == "__main__":
     chi_overlap = 8
     nsteps = 1
     niter = 5
-    n_workers_1, n_workers_2 = (1, 1)
+    n_workers_1, n_workers_2 = (3, 1)
 
 
     X = np.array([[0, 1], [1, 0]])
