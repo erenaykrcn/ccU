@@ -29,6 +29,7 @@ def ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=1):
                 file.write(f"One call in ansatz_PEPS_grad\n")
 
             v_working = v1.copy()
+            w_working = w1.copy()
             k, l = perm[2 * i], perm[2 * i + 1]
             for j in range(i):
                 k_, l_ = perm[2 * j], perm[2 * j + 1]
@@ -40,9 +41,9 @@ def ansatz_PEPS_grad(V, L, v, w, perms, max_bond_dim, chi_overlap, n_workers=1):
                 v_working = applyG_PEPS(V, v_working, L, k_, l_, max_bond_dim)
 
             # normalize
-            w1 /= np.sqrt(compute_overlap(w1, w1, chi_overlap))
+            w_working /= np.sqrt(compute_overlap(w_working, w_working, chi_overlap))
             v_working /= np.sqrt(compute_overlap(v_working, v_working, chi_overlap))
-            T = partial_inner_product(w1, v_working, k, l, chi_overlap).conj()
+            T = partial_inner_product(w_working, v_working, k, l, chi_overlap).conj()
             return T
         with ThreadPoolExecutor(max_workers=n_workers) as ex:
             results = list(ex.map(_pair_grad, range(len(perm) // 2)))
