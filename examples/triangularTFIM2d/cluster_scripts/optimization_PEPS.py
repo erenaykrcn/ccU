@@ -37,7 +37,7 @@ if __name__ == "__main__":
     chi_overlap = 8
     nsteps = 1
     niter = 5
-    n_workers_1, n_workers_2 = (3, 1)
+    n_workers = 3
 
 
     X = np.array([[0, 1], [1, 0]])
@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
     Vlist, f_iter, err_iter = optimize_PEPS(L, reference_states, initial_states, t, 
     	Vlist_start, perms_extended, BD, BD+2, log=True, 
-        niter=niter, n_workers_1=n_workers_1, n_workers_2=n_workers_2)
+        niter=niter, n_workers_1=n_workers, n_workers_2=1)
 
 
     with h5py.File(f"./results/triangularTFIM_PEPS_{J}{h}{g}_Lx{Lx}Ly{Ly}_t{t}_layers{len(Vlist_start)}_niter{niter}.hdf5", "w") as f:
