@@ -1,3 +1,4 @@
+import h5py
 import qib
 import numpy as np
 from tenpy.models.lattice import Kagome
@@ -166,7 +167,7 @@ def ccU(peps, Vlist, perms_extended, control_layers, dagger=False, max_bond_dim=
 
 Vlists = {}
 for t in [0.125]:
-    with h5py.File(f'./results/kagome_000_L12_t{t}_layers5.hdf5') as f:
+    with h5py.File(f'../results/kagome_000_L12_t{t}_layers5.hdf5') as f:
         Vlists[t]  =  f["Vlist"][:]
 Vlist = Vlists[0.125]
 perms_extended = [perms_1]  + [perms_2] + [perms_3] + [perms_2]  + [perms_1]
