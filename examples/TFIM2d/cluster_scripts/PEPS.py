@@ -62,7 +62,6 @@ peps_aE = ccU(peps_C.copy(), Vlist, perms_extended, control_layers, dagger=False
                  max_bond_dim=BD, lower_max_bond_dim=BD)
 
 
-
 for state in (peps_E, peps_T, peps_aE):
     # normalize in-place using approximate boundary contraction
     state.normalize(
@@ -86,7 +85,6 @@ overlap_approx = ov_tn.contract_compressed(
 
 with open(f"PEPS_log.txt", "a") as file:
 	file.write("Fidelity for ccU: "+str(np.abs(overlap_approx)))
-
 
  
 for state in (peps_E, peps_T, peps_aE):
