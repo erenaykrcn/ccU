@@ -5,20 +5,21 @@ from tenpy.models.lattice import Kagome
 from tenpy.networks.site import SpinHalfSite
 
 
-BD = 2
-chi_overlap = 5
+BD = 7
+chi_overlap = 12
+result_string = f"kagome_Heis_L12_t0.125_layers3.hdf5"
+perms_extended = [perms_1]  + [perms_2] + [perms_3]
+ref_trotter_order = 4
 
-
-L = 48
-lat = Kagome(4, 4, [SpinHalfSite() for _ in range(3)], bc='periodic')
+L = 27
+lat = Kagome(3, 3, [SpinHalfSite() for _ in range(3)], bc='periodic')
 
 N = lat.N_sites
 A = np.zeros((N, N), dtype=int)
 
 J = (1, 1, 1)
 h = (0, 0, 0)
-
-perms_1 = [[0, 8, 12, 20, 24, 32, 36, 44, 
+"""perms_1 = [[0, 8, 12, 20, 24, 32, 36, 44, 
             2, 9, 14, 21, 26, 33, 38, 45,
            4, 10, 16, 22, 28, 34, 40, 46,
            6, 11, 18, 23, 30, 35, 42, 47], 
@@ -41,6 +42,12 @@ perms_3 = [[1, 8, 3, 9, 13, 20, 5, 10, 15, 21, 25, 32,
             19, 23, 29, 34, 39, 45, 31, 35, 41, 46, 43, 47], 
            [8, 1, 9, 13, 20, 3, 10, 15, 21, 25, 32, 5, 11, 17, 22, 27, 
             33, 37, 44, 7, 23, 29, 34, 39, 45, 19, 35, 41, 46, 31, 47, 43]]
+"""
+
+perms_1 = [[0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 18, 19, 20, 21, 22, 23], [1, 2, 3, 4, 5, 0, 10, 11, 12, 13, 14, 9, 19, 20, 21, 22, 23, 18]]
+perms_2 = [[0, 6, 9, 15, 18, 24, 2, 7, 11, 16, 20, 25, 4, 8, 13, 17, 22, 26], [6, 9, 15, 18, 24, 0, 7, 11, 16, 20, 25, 2, 8, 13, 17, 22, 26, 4]]
+perms_3 = [[0, 1, 3, 7, 10, 15, 5, 8, 12, 16, 19, 24, 14, 17, 21, 25, 23, 26], [1, 0, 7, 10, 15, 3, 8, 12, 16, 19, 24, 5, 17, 21, 25, 14, 26, 23]]
+
 
 for perm in perms_1+perms_2+perms_3:
     for i in range(len(perm)//2):
@@ -167,10 +174,9 @@ def ccU(peps, Vlist, perms_extended, control_layers, dagger=False, max_bond_dim=
 
 Vlists = {}
 for t in [0.125]:
-    with h5py.File(f'../results/kagome_000_L12_t{t}_layers5.hdf5') as f:
+    with h5py.File(f'../results/{result_string}') as f:
         Vlists[t]  =  f["Vlist"][:]
 Vlist = Vlists[0.125]
-perms_extended = [perms_1]  + [perms_2] + [perms_3] + [perms_2]  + [perms_1]
 
 
 chi_overlap = 20
@@ -201,11 +207,11 @@ peps_C = peps.copy()
 
 nsteps = 1
 peps_E = trotter(peps_E.copy(), t, L,  J, perms_1+perms_2+perms_3,
-                     dt=t/nsteps, max_bond_dim=BD, trotter_order=2)
+                     dt=t/nsteps, max_bond_dim=BD, trotter_order=ref_trotter_order)
 peps_aE = ccU(peps_C.copy(), Vlist, perms_extended, [], dagger=False,
                  max_bond_dim=BD)
-peps_T = trotter(peps_T.copy(), t, L,  J, perms_1+perms_2+perms_3,
-                     dt=t/nsteps, max_bond_dim=BD, trotter_order=1)
+#peps_T = trotter(peps_T.copy(), t, L,  J, perms_1+perms_2+perms_3,
+#                     dt=t/nsteps, max_bond_dim=BD, trotter_order=1)
 
 peps_T.compress_all(max_bond=BD)
 peps_E.compress_all(max_bond=BD)
