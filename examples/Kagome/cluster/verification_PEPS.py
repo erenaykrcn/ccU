@@ -237,4 +237,4 @@ overlap_approx = ov_tn.contract_compressed(
 )
 
 with open(f"PEPS_log.txt", "a") as file:
-    file.write("Fidelity for ccU: "+str(np.abs(overlap_approx))+"\n")
+    file.write("Fidelity for ccU, Heisenberg: "+str(np.abs(overlap_approx))+"\n")
