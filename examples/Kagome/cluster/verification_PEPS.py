@@ -4,13 +4,20 @@ import numpy as np
 from tenpy.models.lattice import Kagome
 from tenpy.networks.site import SpinHalfSite
 
+J = (1, 1, 1)
+h = (0, 0, 0)
+# Pauli and identity
+X = np.array([[0, 1], [1, 0]])
+Y = np.array([[0, -1j], [1j, 0]])
+Z = np.array([[1, 0], [0, -1]])
+I2 = np.eye(2)
 
 perms_1 = [[0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 18, 19, 20, 21, 22, 23], [1, 2, 3, 4, 5, 0, 10, 11, 12, 13, 14, 9, 19, 20, 21, 22, 23, 18]]
 perms_2 = [[0, 6, 9, 15, 18, 24, 2, 7, 11, 16, 20, 25, 4, 8, 13, 17, 22, 26], [6, 9, 15, 18, 24, 0, 7, 11, 16, 20, 25, 2, 8, 13, 17, 22, 26, 4]]
 perms_3 = [[0, 1, 3, 7, 10, 15, 5, 8, 12, 16, 19, 24, 14, 17, 21, 25, 23, 26], [1, 0, 7, 10, 15, 3, 8, 12, 16, 19, 24, 5, 17, 21, 25, 14, 26, 23]]
 
 BD = 7
-chi_overlap = 12
+chi_overlap = 15
 result_string = f"kagome_Heis_L12_t0.125_layers3.hdf5"
 perms_extended = [perms_1]  + [perms_2] + [perms_3]
 ref_trotter_order = 4
@@ -29,8 +36,7 @@ lat = Kagome(3, 3, [SpinHalfSite() for _ in range(3)], bc='periodic')
 N = lat.N_sites
 A = np.zeros((N, N), dtype=int)
 
-J = (1, 1, 1)
-h = (0, 0, 0)
+
 """perms_1 = [[0, 8, 12, 20, 24, 32, 36, 44, 
             2, 9, 14, 21, 26, 33, 38, 45,
            4, 10, 16, 22, 28, 34, 40, 46,
@@ -68,11 +74,7 @@ import time
 import rqcopt as oc
 from quimb.tensor.tensor_arbgeom_tebd import LocalHamGen, TEBDGen, edge_coloring
 
-# Pauli and identity
-X = np.array([[0, 1], [1, 0]])
-Y = np.array([[0, -1j], [1j, 0]])
-Z = np.array([[1, 0], [0, -1]])
-I2 = np.eye(2)
+
 
 
 def layer_from_flat_perm(perm_row, L):

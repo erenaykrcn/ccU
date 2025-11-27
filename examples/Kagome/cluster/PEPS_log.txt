@@ -1,1 +1,2 @@
 Fidelity for ccU: 0.5195793346036279
+Fidelity for ccU, Heisenberg: 0.8909801930424293
