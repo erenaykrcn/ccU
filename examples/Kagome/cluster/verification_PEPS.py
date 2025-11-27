@@ -10,6 +10,14 @@ chi_overlap = 12
 result_string = f"kagome_Heis_L12_t0.125_layers3.hdf5"
 perms_extended = [perms_1]  + [perms_2] + [perms_3]
 ref_trotter_order = 4
+    
+hloc1 = J[0]*np.kron(X, X)
+hloc2 = J[1]*np.kron(Y, Y)
+hloc3 = J[2]*np.kron(Z, Z)
+hlocs = (hloc1, hloc2, hloc3)
+#hloc1 = J*np.kron(Z, Z)
+#hloc2 = g*(np.kron(X, I2)+np.kron(I2, X))/4
+#hlocs = (hloc1, hloc2)
 
 L = 27
 lat = Kagome(3, 3, [SpinHalfSite() for _ in range(3)], bc='periodic')
@@ -117,6 +125,8 @@ def build_triangular_PEPS(bond_dim, phys_dim=2,
 
 import gc
 
+import gc
+
 def trotter(peps, t, L, J, perms, dag=False,
                       max_bond_dim=5, dt=0.1, trotter_order=2):
     # Number of steps
@@ -125,18 +135,15 @@ def trotter(peps, t, L, J, perms, dag=False,
 
     # Suzuki splitting
     if trotter_order > 1:
-        sm = oc.SplittingMethod.suzuki(2, int(np.log(trotter_order)/np.log(2)))
+        sm = oc.SplittingMethod.suzuki(len(hlocs), int(np.log(trotter_order)/np.log(2)))
         indices, coeffs = sm.indices, sm.coeffs
     else:
-        indices, coeffs = [0, 1, 2], [1, 1, 1]
-    
-    hloc1 = J[0]*np.kron(X, X)
-    hloc2 = J[1]*np.kron(Y, Y)
-    hloc3 = J[2]*np.kron(Z, Z)
-    hlocs = (hloc1, hloc2, hloc3)
+        indices, coeffs = range(len(hlocs)), [1]*len(hlocs)
+        
     Vlist_start = []
     for i, c in zip(indices, coeffs):
         Vlist_start.append(-1j*c*dt*hlocs[i])
+    
 
     for n in range(nsteps):
         for layer, V in enumerate(Vlist_start):
@@ -170,7 +177,8 @@ def ccU(peps, Vlist, perms_extended, control_layers, dagger=False, max_bond_dim=
                 del tebd, ham
                 gc.collect()
     return peps
-    import h5py
+
+import h5py
 
 Vlists = {}
 for t in [0.125]:
