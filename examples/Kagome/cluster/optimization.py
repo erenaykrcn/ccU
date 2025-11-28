@@ -14,6 +14,8 @@ from scipy.linalg import expm
 from qiskit.quantum_info import state_fidelity
 
 
+result_string = None
+
 def bonds_from_perms(perms):
     bonds = []
     for p in perms:
@@ -136,8 +138,11 @@ print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(Vli
 from optimize_sparse import optimize
 import h5py
 
-with h5py.File(f'../results/{result_string}') as f:
-    Vlists[t]  =  f["Vlist"][:]
+if result_string is not None:
+    with h5py.File(f'../results/{result_string}') as f:
+        Vlist_start_2  =  f["Vlist"][:]
+else:
+    Vlist_start_2 = Vlist_start
 
 niter = 8
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start_2, perms_extended, perms_reduced=perms_ext_reduced,
