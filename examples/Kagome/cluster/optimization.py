@@ -136,8 +136,11 @@ print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(Vli
 from optimize_sparse import optimize
 import h5py
 
+with h5py.File(f'../results/{result_string}') as f:
+    Vlists[t]  =  f["Vlist"][:]
+
 niter = 8
-Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_extended, perms_reduced=perms_ext_reduced,
+Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start_2, perms_extended, perms_reduced=perms_ext_reduced,
                                    control_layers=control_layers, rS=1, niter=niter)
 
 with h5py.File(f"../results/kagome_Heis_L{L}_t{t}_layers{len(Vlist)}.hdf5", "w") as f:

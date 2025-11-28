@@ -42,7 +42,6 @@ hloc3 = construct_heisenberg_local_term((0   , 0   , J[2]), (h[0], 0,       0), 
 V1 = scipy.linalg.expm(-1j*t*hloc1/2)
 V2 = scipy.linalg.expm(-1j*t*hloc2/2)
 V3 = scipy.linalg.expm(-1j*t*hloc3)
-
 X = np.array([[0, 1], [1, 0]])
 Z = np.array([[1, 0], [0, -1]])
 Y = np.array([[0, -1j], [1j, 0]])
@@ -50,7 +49,6 @@ I2 = np.array([[1, 0], [0, 1]])
 XZ = np.kron(X, Z)
 XY = np.kron(X, Y)
 ZY = np.kron(Z, Y)
-
 Vlist_start = [XZ, V1, XZ]*3 + [XY, V2, XY]*3 + [ZY, V3, ZY]*3 + [XY, V2, XY]*3 + [XZ, V1, XZ]*3
 Vlist_reduced = [V1]*3 + [V2]*3  + [V3]*3 + [V2]*3 + [V1]*3 
 
