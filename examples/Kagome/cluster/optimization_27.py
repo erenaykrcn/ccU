@@ -13,7 +13,6 @@ from qiskit.quantum_info import random_statevector
 from scipy.linalg import expm
 from qiskit.quantum_info import state_fidelity
 
-
 result_string = None
 
 def bonds_from_perms(perms):
@@ -121,9 +120,9 @@ perms_extended = [[perms_1[0]]] + [perms_1] + [[perms_1[0]], [perms_2[0]]] +\
 perms_extended = perms_extended*3
 perms_ext_reduced = [perms_1] + [perms_2] + [perms_3]
 perms_ext_reduced = perms_ext_reduced*3
-non_control_layers = [i for i in range(1, Vlist_start, 3)]
+non_control_layers = [i for i in range(1, len(Vlist_start), 3)]
 control_layers = []
-for i in range(Vlist_start):
+for i in range(len(Vlist_start)):
     if i not in non_control_layers:
         control_layers.append(i)
 
