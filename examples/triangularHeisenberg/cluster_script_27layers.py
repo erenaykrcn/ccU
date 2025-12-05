@@ -51,7 +51,6 @@ XY = np.kron(X, Y)
 ZY = np.kron(Z, Y)
 Vlist_start = [XZ, V1, XZ]*3 + [XY, V2, XY]*3 + [ZY, V3, ZY]*3
 Vlist_reduced = [V1]*3 + [V2]*3  + [V3]*3
-
 perms_extended = [[perms_1[0]]] + [perms_1] + [[perms_1[0]], [perms_2[0]]] +\
       [perms_2] + [[perms_2[0]], [perms_3[0]]] +  [perms_3] + [[perms_3[0]]]
 perms_extended = perms_extended*3
