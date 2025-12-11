@@ -8,16 +8,14 @@ from utils import (
 
 
 def ansatz_hessian_matrix(Vlist, L, cU, perms, flatten=True, unprojected=False):
-	"""
-	Construct the Hessian matrix.
-	"""
+	
 	eta = len(Vlist)
-	Hess = np.zeros((eta, 16, eta, 16))
+	Hess = np.zeros((eta, 16, eta, 16), dtype=np.longdouble)
 
 	for k in range(eta):
 		for j in range(16):
 			if unprojected:
-				Z = np.zeros((4, 4), dtype=complex)
+				Z = np.zeros((4, 4), dtype=np.complex128)
 				Z.flat[j] = 1.0
 			else:
 				Z = np.zeros(16)
@@ -37,10 +35,8 @@ def ansatz_hessian_matrix(Vlist, L, cU, perms, flatten=True, unprojected=False):
 
 
 def ansatz_hess_single_layer(V, L, Z, U_tilde_, perm):
-	"""
-		Computes single permutation hessian for the i==k.
-	"""
-	G = np.zeros_like(V, dtype=complex)
+	
+	G = np.zeros_like(V, dtype=np.complex128)
 	for i in range(len(perm)//2):
 		k, l = (perm[2*i], perm[2*i+1])
 		for z in range(len(perm)//2):
@@ -78,7 +74,7 @@ def ansatz_grad_directed(V, U_tilde, L, Z, perm):
 	assert Z.shape == (4, 4)
 	#assert L % 2 == 0
 
-	G = np.zeros((2**L, 2**L), dtype=complex).reshape([2]*2*L)
+	G = np.zeros((2**L, 2**L), dtype=np.complex128).reshape([2]*2*L)
 	for i in range(len(perm)//2):
 		U = np.eye(2**L).reshape([2]*2*L)
 		k, l = (perm[2*i], perm[2*i+1])
@@ -98,11 +94,6 @@ def ansatz_grad_directed(V, U_tilde, L, Z, perm):
 
 
 def ansatz_hess(Vlist, L, Z, k, cU, perms, unprojected=False):
-	"""
-		Assumes the Z_k grad. evaluation happens in the V gates layer.
-		There are 4 possibilities for the i sum: i=k, i<k and i>k within 
-		the V layer and i within the W layer. 
-	"""
 	dVlist = [None for i in range(len(Vlist))]
 	# i runs over Vlist, i>k
 	for i in range(k+1, len(Vlist)):
@@ -153,7 +144,4 @@ def ansatz_hess(Vlist, L, Z, k, cU, perms, unprojected=False):
 	dVlist[k] = G
 
 	return dVlist
-
-
-
 

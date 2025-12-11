@@ -63,8 +63,8 @@ def get_params_heis111(eta, gamma):
 
 def applyG_tensor(G, U_tensor, k, l):
     """
-        Performs a 'left' multiplication of applying G
-        two qubit gate to qubits k and l.
+        #Performs a 'left' multiplication of applying G
+        #two qubit gate to qubits k and l.
     """
     L = U_tensor.ndim // 2
     assert G.shape == (4, 4), "G must be a 2-qubit gate (4x4)"
@@ -103,10 +103,9 @@ def applyG_tensor(G, U_tensor, k, l):
 
 def applyG_block_tensor(G, U_tensor, L, perm):
     """
-    Applies the 2-qubit gate G to every (k, l) in `perm` (length 2n) 
-    on the (2,)*2L tensor U_tensor.
-
-    G is a (4, 4) matrix.
+    #Applies the 2-qubit gate G to every (k, l) in `perm` (length 2n) 
+    #on the (2,)*2L tensor U_tensor.
+    #G is a (4, 4) matrix.
     """
     assert len(perm) % 2 == 0
     for j in range(len(perm) // 2):

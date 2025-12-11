@@ -13,14 +13,16 @@ def ansatz(Vlist, L, perms):
     to a (2,)*2L tensor without forming large matrices.
     """
     assert len(Vlist) == len(perms)
-    ret_tensor = np.eye(2**L, dtype=complex).reshape([2]*2*L)
+    ret_tensor = np.eye(2**L, dtype=np.complex128).reshape([2]*2*L)
     for i, V in enumerate(Vlist):
         ret_tensor = applyG_block_tensor(V, ret_tensor, L, perms[i])
     return ret_tensor.reshape(2**L, 2**L)
 
 
 def ansatz_grad(V, L, U_tilde_tensor, perm):
-    G = np.zeros_like(V, dtype=complex)
+    V = np.asarray(V, dtype=np.complex128)
+    U_tilde_tensor = np.asarray(U_tilde_tensor, dtype=np.complex128)
+    G = np.zeros_like(V, dtype=np.complex128)
     for i in range(len(perm) // 2):
         k, l = perm[2 * i], perm[2 * i + 1]
         U_working = U_tilde_tensor.copy()
@@ -32,13 +34,14 @@ def ansatz_grad(V, L, U_tilde_tensor, perm):
             U_working = applyG_tensor(V, U_working, k_, l_)
         T = partial_trace_keep(U_working.reshape(2**L, 2**L), [k, l], L)
         if k > l:
-            SWAP = np.array([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
+            SWAP = np.array([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]], dtype=np.complex128)
             T = SWAP @ T @ SWAP
         G += T
     return G
 
 
 def ansatz_grad_vector(Vlist, L, cU, perms, flatten=True, unprojected=False):
+    cU = np.asarray(cU, dtype=np.complex128)
     grad = []
     for i, V in enumerate(Vlist):
         U_tilde = np.eye(2**L).reshape([2]*2*L)
@@ -63,6 +66,8 @@ def ansatz_grad_vector(Vlist, L, cU, perms, flatten=True, unprojected=False):
             antisymm_to_real(antisymm(Vlist[j].conj().T @ grad[j]))
             for j in range(len(grad))
         ])
+
+
 
 
 def construct_ccU(L, eta, Vs, Xlists_opt, perms, perms_qc):
