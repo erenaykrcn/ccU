@@ -6,6 +6,7 @@ from utils_sparse import (polar_decomp, real_to_antisymm, real_to_skew,
     separability_penalty, grad_separability_penalty, reduce_list)
 from qiskit.quantum_info import random_statevector
 from scipy.sparse.linalg import expm_multiply
+from qiskit.quantum_info import state_fidelity
 
 
 def err(vlist, Uv, v, L, perms):
@@ -96,7 +97,7 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
         if len(control_layers)==0:
             e = 0
             for v in random_svs:
-                e += np.linalg.norm(ansatz_sparse(vlist, L, perms, v) - expm_multiply(-1j * t * hamil, v), ord=2)
+                e += state_fidelity(ansatz_sparse(vlist, L, perms, v), expm_multiply(-1j * t * hamil, v))
             print("Current error: ", e/rS)
 
             if log:
@@ -112,10 +113,10 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
 
             e = 0
             for v in random_svs:
-                e += np.linalg.norm(ansatz_sparse(vlist, L, perms, v) - expm_multiply(1j * t * hamil, v), ord=2) 
-                e += np.linalg.norm(ansatz_sparse(vlist_reduced, L, perms_reduced, v) - expm_multiply(-1j * t * hamil, v), ord=2)
-                
-            with open("log.txt", "a") as file:
+                e += state_fidelity(ansatz_sparse(vlist, L, perms, v), expm_multiply(1j * t * hamil, v)) 
+                e += state_fidelity(ansatz_sparse(vlist_reduced, L, perms_reduced, v), expm_multiply(-1j * t * hamil, v))
+
+            with open(f"./KAGOME_12_L{n}_t{t}_log.txt", "a") as file:
                 file.write(f"Error {e/(2*rS)}\n")
             print("Current error: ", e/(2*rS))
             return e/(2*rS)
