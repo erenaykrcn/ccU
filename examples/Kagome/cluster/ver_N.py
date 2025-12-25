@@ -256,7 +256,7 @@ overlap_approx = ov_tn.contract_compressed(
     max_bond=chi_overlap,
     cutoff=cutoff,
 )
-with open(f"PEPS_log.txt", "a") as file:
+with open(f"{L}_PEPS_log.txt", "a") as file:
     file.write("\n Fidelity for TICC: "+str(np.abs(overlap_approx)) + "\n")
 
 
@@ -269,7 +269,7 @@ overlap_approx = ov_tn.contract_compressed(
     max_bond=chi_overlap,
     cutoff=cutoff,
 )
-with open(f"PEPS_log.txt", "a") as file:
+with open(f"{L}_PEPS_log.txt", "a") as file:
     file.write(f"Fidelity for Trotter {trotter_order}: "+str(np.abs(overlap_approx)) + "\n")
 
 
