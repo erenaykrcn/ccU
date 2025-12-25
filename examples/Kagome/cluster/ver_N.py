@@ -16,8 +16,8 @@ from quimb.tensor.tensor_2d_tebd import TEBD2D, LocalHam2D
 import h5py
 
 
-Lx = 4
-BD, chi_overlap  = (3, 10)
+Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (3, 4, 5, 29, 3)
+#Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (4, 3, 2, 12, 2)
 cutoff = 1e-12
 layers=36
 t = 0.1
@@ -47,10 +47,6 @@ for i in range(Lx):
 
 
 if Lx== 3:
-    #perms_1 = [[0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 18, 19, 20, 21, 22, 23], 
-    #           [1, 2, 3, 4, 5, 0, 10, 11, 12, 13, 14, 9, 19, 20, 21, 22, 23, 18]]
-    #perms_2 = [[0, 6, 9, 15, 18, 24, 2, 7, 11, 16, 20, 25, 4, 8, 13, 17, 22, 26], 
-    #           [6, 9, 15, 18, 24, 0, 7, 11, 16, 20, 25, 2, 8, 13, 17, 22, 26, 4]]
     perms_3 = [[6, 1, 3, 7, 10, 15, 5, 8, 12, 16, 19, 24, 14, 17, 21, 25, 23, 26],
                [1, 6, 7, 10, 15, 3, 8, 12, 16, 19, 24, 5, 17, 21, 25, 14, 26, 23]]
 elif Lx==2:
@@ -251,25 +247,29 @@ ov_tn = peps_E.make_overlap(
     peps_aE,
     layer_tags=("KET", "BRA"),
 )
-overlap_approx = ov_tn.contract_compressed(
-    optimize="hyper-compressed",
-    max_bond=chi_overlap,
-    cutoff=cutoff,
-)
-with open(f"{L}_PEPS_log.txt", "a") as file:
-    file.write("\n Fidelity for TICC: "+str(np.abs(overlap_approx)) + "\n")
+
+for chi_overlap in range(chi_overlap1, chi_overlap2, chi_overlap_incr):
+    overlap_approx = ov_tn.contract_compressed(
+        optimize="hyper-compressed",
+        max_bond=chi_overlap,
+        cutoff=cutoff,
+    )
+    with open(f"{L}_PEPS_log.txt", "a") as file:
+        file.write("\n Fidelity for TICC: "+str(np.abs(overlap_approx)) + ", BD={BD}, chi_overlap={chi_overlap} \n")
 
 
 ov_tn = peps_E.make_overlap(
     peps_T,
     layer_tags=("KET", "BRA"),
 )
-overlap_approx = ov_tn.contract_compressed(
-    optimize="hyper-compressed",
-    max_bond=chi_overlap,
-    cutoff=cutoff,
-)
-with open(f"{L}_PEPS_log.txt", "a") as file:
-    file.write(f"Fidelity for Trotter {trotter_order}: "+str(np.abs(overlap_approx)) + "\n")
+
+for chi_overlap in range(chi_overlap1, chi_overlap2, chi_overlap_incr):
+    overlap_approx = ov_tn.contract_compressed(
+        optimize="hyper-compressed",
+        max_bond=chi_overlap,
+        cutoff=cutoff,
+    )
+    with open(f"{L}_PEPS_log.txt", "a") as file:
+        file.write(f"Fidelity for Trotter {trotter_order}: "+str(np.abs(overlap_approx)) + ", BD={BD}, chi_overlap={chi_overlap} \n")
 
 
