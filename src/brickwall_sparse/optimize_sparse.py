@@ -97,7 +97,7 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
         if len(control_layers)==0:
             e = 0
             for v in random_svs:
-                e += state_fidelity(ansatz_sparse(vlist, L, perms, v), expm_multiply(-1j * t * hamil, v))
+                e += 1-state_fidelity(ansatz_sparse(vlist, L, perms, v), expm_multiply(-1j * t * hamil, v))
             print("Current error: ", e/rS)
 
             if log:
@@ -113,8 +113,8 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
 
             e = 0
             for v in random_svs:
-                e += state_fidelity(ansatz_sparse(vlist, L, perms, v), expm_multiply(1j * t * hamil, v)) 
-                e += state_fidelity(ansatz_sparse(vlist_reduced, L, perms_reduced, v), expm_multiply(-1j * t * hamil, v))
+                e += 1-state_fidelity(ansatz_sparse(vlist, L, perms, v), expm_multiply(1j * t * hamil, v)) 
+                e += 1-state_fidelity(ansatz_sparse(vlist_reduced, L, perms_reduced, v), expm_multiply(-1j * t * hamil, v))
 
             with open(f"./KAGOME_12_L{n}_t{t}_log.txt", "a") as file:
                 file.write(f"Error {e/(2*rS)}\n")
