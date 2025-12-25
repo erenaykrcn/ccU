@@ -15,7 +15,7 @@ import quimb
 from quimb.tensor.tensor_2d_tebd import TEBD2D, LocalHam2D
 import h5py
 
-
+chi_overlap = 10
 Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (3, 4, 5, 29, 3)
 #Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (4, 3, 2, 12, 2)
 cutoff = 1e-12
