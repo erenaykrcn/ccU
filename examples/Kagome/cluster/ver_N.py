@@ -255,7 +255,7 @@ for chi_overlap in range(chi_overlap1, chi_overlap2, chi_overlap_incr):
         cutoff=cutoff,
     )
     with open(f"{L}_PEPS_log.txt", "a") as file:
-        file.write("\n Fidelity for TICC: "+str(np.abs(overlap_approx)) + ", BD={BD}, chi_overlap={chi_overlap} \n")
+        file.write("\n Fidelity for TICC: "+str(np.abs(overlap_approx)) + f", BD={BD}, chi_overlap={chi_overlap} \n")
 
 
 ov_tn = peps_E.make_overlap(
@@ -270,6 +270,6 @@ for chi_overlap in range(chi_overlap1, chi_overlap2, chi_overlap_incr):
         cutoff=cutoff,
     )
     with open(f"{L}_PEPS_log.txt", "a") as file:
-        file.write(f"Fidelity for Trotter {trotter_order}: "+str(np.abs(overlap_approx)) + ", BD={BD}, chi_overlap={chi_overlap} \n")
+        file.write(f"Fidelity for Trotter {trotter_order}: "+str(np.abs(overlap_approx)) + f", BD={BD}, chi_overlap={chi_overlap} \n")
 
 
