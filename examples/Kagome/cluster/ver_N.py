@@ -17,7 +17,7 @@ import h5py
 
 
 Lx = 4
-BD, chi_overlap  = (4, 15)
+BD, chi_overlap  = (3, 10)
 cutoff = 1e-12
 layers=36
 t = 0.1
@@ -31,34 +31,39 @@ A = np.zeros((N, N), dtype=int)
 J = (1, 1, 1)
 h = (3, -1, 1)
 
-perms_1 = []
+perms_1_ = []
 for i in range(Lx):
-    perms_1 += [i*3*Lx+j for j in range(2*Lx)]
-perms_2 = []
+    perms_1_ += [i*3*Lx+j for j in range(2*Lx)]
+perms_2_ = []
 for i in range(Lx):
     for j in range(Lx):
-        perms_2 += [2*i+j*(Lx*3), 2*i+j*(Lx*3)+(Lx*2-i)]
+        perms_2_ += [2*i+j*(Lx*3), 2*i+j*(Lx*3)+(Lx*2-i)]
+perms_1 = [perms_1_, []]
+for i in range(Lx):
+    perms_1[1] += list(np.roll(np.array(perms_1_[2*Lx*i:2*Lx*(i+1)]), 1))
+perms_2 = [perms_2_, []]
+for i in range(Lx):
+    perms_2[1] += list(np.roll(np.array(perms_2_[2*Lx*i:2*Lx*(i+1)]), 1))
 
-print(perms_1)
-print(perms_2)
-if Lx=3:
-    perms_1 = [[0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 18, 19, 20, 21, 22, 23], 
-               [1, 2, 3, 4, 5, 0, 10, 11, 12, 13, 14, 9, 19, 20, 21, 22, 23, 18]]
-    perms_2 = [[0, 6, 9, 15, 18, 24, 2, 7, 11, 16, 20, 25, 4, 8, 13, 17, 22, 26], 
-               [6, 9, 15, 18, 24, 0, 7, 11, 16, 20, 25, 2, 8, 13, 17, 22, 26, 4]]
+
+if Lx==3:
+    #perms_1 = [[0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 18, 19, 20, 21, 22, 23], 
+    #           [1, 2, 3, 4, 5, 0, 10, 11, 12, 13, 14, 9, 19, 20, 21, 22, 23, 18]]
+    #perms_2 = [[0, 6, 9, 15, 18, 24, 2, 7, 11, 16, 20, 25, 4, 8, 13, 17, 22, 26], 
+    #           [6, 9, 15, 18, 24, 0, 7, 11, 16, 20, 25, 2, 8, 13, 17, 22, 26, 4]]
     perms_3 = [[6, 1, 3, 7, 10, 15, 5, 8, 12, 16, 19, 24, 14, 17, 21, 25, 23, 26],
                [1, 6, 7, 10, 15, 3, 8, 12, 16, 19, 24, 5, 17, 21, 25, 14, 26, 23]]
 elif Lx==2:
     perms_3 = [[1, 4, 9, 11, 3, 5, 7, 10], [4, 1, 11, 9, 5, 7, 10, 3]]
 elif Lx ==4:
-    perms_3 = [[1, 8, 3, 9, 13, 20, 5, 10, 15, 21, 25, 32, 7, 11, 17, 22, 27, 33, 37, 44, 19, 23, 29, 34, 39, 45, 31, 35, 41, 46 43, 47],
+    perms_3 = [[1, 8, 3, 9, 13, 20, 5, 10, 15, 21, 25, 32, 7, 11, 17, 22, 27, 33, 37, 44, 19, 23, 29, 34, 39, 45, 31, 35, 41, 46, 43, 47],
     [8, 1, 9, 13, 20, 23, 10, 15, 21, 25, 32, 5, 11, 17, 22, 27, 33, 37, 44, 7, 23, 29, 34, 39, 45, 19, 35, 41, 46, 31, 47, 43]]
 
 for perm in perms_1+perms_2+perms_3:
     for i in range(len(perm)//2):
         A[perm[2*i], perm[2*i+1]] = 1
         A[perm[2*i+1], perm[2*i]] = 1
-
+print(perms_1)
 
 # Pauli and identity
 X = np.array([[0, 1], [1, 0]])
@@ -106,6 +111,7 @@ def build_triangular_PEPS(bond_dim, phys_dim=2,
     )
 
     return tn, (perms_1, perms_2, perms_3)
+
 
 def trotter(peps, t, L, J,  perms, dag=False,
                       max_bond_dim=5, dt=0.1, trotter_order=2, h=h):
