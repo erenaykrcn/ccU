@@ -15,7 +15,8 @@ import quimb
 from quimb.tensor.tensor_2d_tebd import TEBD2D, LocalHam2D
 import h5py
 
-chi_overlap = 10
+
+chi_overlap = 25
 Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (3, 4, 5, 29, 3)
 #Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (4, 3, 2, 12, 2)
 cutoff = 1e-12
@@ -47,8 +48,8 @@ for i in range(Lx):
 
 
 if Lx== 3:
-    perms_3 = [[6, 1, 3, 7, 10, 15, 5, 8, 12, 16, 19, 24, 14, 17, 21, 25, 23, 26],
-               [1, 6, 7, 10, 15, 3, 8, 12, 16, 19, 24, 5, 17, 21, 25, 14, 26, 23]]
+    perms_3 = [[1, 6, 3, 7, 10, 15, 5, 8, 12, 16, 19, 24, 14, 17, 21, 25, 23, 26],
+               [6, 1, 7, 10, 15, 3, 8, 12, 16, 19, 24, 5, 17, 21, 25, 14, 26, 23]]
 elif Lx==2:
     perms_3 = [[1, 4, 9, 11, 3, 5, 7, 10], [4, 1, 11, 9, 5, 7, 10, 3]]
 elif Lx ==4:
@@ -247,7 +248,6 @@ ov_tn = peps_E.make_overlap(
     peps_aE,
     layer_tags=("KET", "BRA"),
 )
-
 for chi_overlap in range(chi_overlap1, chi_overlap2, chi_overlap_incr):
     overlap_approx = ov_tn.contract_compressed(
         optimize="hyper-compressed",
@@ -262,7 +262,6 @@ ov_tn = peps_E.make_overlap(
     peps_T,
     layer_tags=("KET", "BRA"),
 )
-
 for chi_overlap in range(chi_overlap1, chi_overlap2, chi_overlap_incr):
     overlap_approx = ov_tn.contract_compressed(
         optimize="hyper-compressed",
