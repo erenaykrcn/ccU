@@ -1,7 +1,8 @@
 import numpy as np
 from ansatz_sparse import ansatz_sparse, ansatz_sparse_grad_vector
 from hessian_sparse import ansatz_sparse_hessian_matrix
-from rqcopt.trust_region import riemannian_trust_region_optimize
+from rqcopt.trust_region import truncated_cg
+import warnings
 from utils_sparse import (polar_decomp, real_to_antisymm, real_to_skew, 
     separability_penalty, grad_separability_penalty, reduce_list)
 from qiskit.quantum_info import random_statevector
@@ -116,7 +117,7 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
                 e += 1-state_fidelity(ansatz_sparse(vlist, L, perms, v), expm_multiply(1j * t * hamil, v)) 
                 e += 1-state_fidelity(ansatz_sparse(vlist_reduced, L, perms_reduced, v), expm_multiply(-1j * t * hamil, v))
 
-            with open(f"./KAGOME_12_L{n}_t{t}_log.txt", "a") as file:
+            with open(f"./_optlog_12_L{n}_t{t}_log.txt", "a") as file:
                 file.write(f"Error {e/(2*rS)}\n")
             print("Current error: ", e/(2*rS))
             return e/(2*rS)
@@ -135,3 +136,62 @@ def retract_unitary_list(vlist, eta):
     eta = np.reshape(eta, (n, 4, 4))
     dvlist = [vlist[j] @ real_to_antisymm(eta[j]) for j in range(n)]
     return np.stack([polar_decomp(vlist[j] + dvlist[j])[0] for j in range(n)])
+
+
+
+def riemannian_trust_region_optimize(f, retract, gradfunc, hessfunc, x_init, **kwargs):
+    rho_trust   = kwargs.get("rho_trust", 0.125)
+    radius_init = kwargs.get("radius_init", 0.01)
+    maxradius   = kwargs.get("maxradius",   0.1)
+    niter       = kwargs.get("niter", 20)
+    gfunc       = kwargs.get("gfunc", None)
+    # transfer keyword arguments for truncated_cg
+    tcg_kwargs = {}
+    for key in ["maxiter", "abstol", "reltol"]:
+        if ("tcg_" + key) in kwargs.keys():
+            tcg_kwargs[key] = kwargs["tcg_" + key]
+    assert 0 <= rho_trust < 0.25
+    x = x_init
+    radius = radius_init
+    f_iter = []
+    g_iter = []
+    if gfunc is not None:
+        g_iter.append(gfunc(x))
+
+    tol = 1e-5          # convergence threshold
+    patience = 5        # number of consecutive small changes required
+    conv_counter = 0
+    for k in range(niter):
+        grad = gradfunc(x)
+        hess = hessfunc(x)
+        eta, on_boundary = truncated_cg(grad, hess, radius, **tcg_kwargs)
+        x_next = retract(x, eta)
+        fx = f(x)
+        f_iter.append(fx)
+        # Eq. (7.7)
+        rho = (f(x_next) - fx) / (np.dot(grad, eta) + 0.5 * np.dot(eta, hess @ eta))
+        if rho < 0.25:
+            # reduce radius
+            radius *= 0.25
+        elif rho > 0.75 and on_boundary:
+            # enlarge radius
+            radius = min(2 * radius, maxradius)
+        if rho > rho_trust:
+            x = x_next
+        if gfunc is not None:
+            g_iter.append(gfunc(x))
+
+        # ---- convergence check block ----
+        if len(g_iter) > 1:
+            if abs(g_iter[-1] - g_iter[-2]) < tol:
+                conv_counter += 1
+            else:
+                conv_counter = 0
+
+            if conv_counter >= patience:
+                with open(f"./_optlog_12_L{n}_t{t}_log.txt", "a") as file:
+                    file.write(f"Converged at iteration {k}")
+                break
+
+
+    return x, f_iter, g_iter
