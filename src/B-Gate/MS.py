@@ -104,6 +104,7 @@ def collapse_operators(
     T2=np.inf,
     heating_rate=0.0,   # phonons/s (i.e., \dot{n})
     n_th=0.0,           # optional thermal occupancy for symmetric heating/cooling
+    motional_Tphi=np.inf,
     motional_damping=0.0 # optional mode damping rate (1/s), to a bath with n_th
 ):
     """
@@ -147,6 +148,17 @@ def collapse_operators(
         a = op_on_mode(destroy_mode(Nmode), Nmode)
         cops.append(np.sqrt(heating_rate) * a.dag())
 
+
+    # ----------------
+    # Motional dephasing (NEW)
+    # ----------------
+    if np.isfinite(motional_Tphi) and motional_Tphi > 0:
+        gamma_phi_m = 1.0 / motional_Tphi
+        a = op_on_mode(destroy_mode(Nmode), Nmode)
+        n_op = a.dag() * a
+        cops.append(np.sqrt(gamma_phi_m) * n_op)
+
+
     # Optional motional damping to thermal bath:
     #   Γ (n_th+1) D[a] + Γ n_th D[a†]
     if motional_damping and motional_damping > 0:
@@ -185,6 +197,7 @@ def run_ms_gate_single_shot(
     T1=np.inf,
     T2=np.inf,
     heating_rate=0.0,
+    mot_deph=np.inf,
     z0_0=0.0,      # quasi-static Z offset for qubit 0 (rad/s)
     z0_1=0.0,      # quasi-static Z offset for qubit 1 (rad/s)
     t_gate=None,
@@ -224,7 +237,7 @@ def run_ms_gate_single_shot(
 
     # Collapses
     cops = collapse_operators(
-        Nmode=Nmode, T1=T1, T2=T2,
+        Nmode=Nmode, T1=T1, T2=T2, motional_Tphi=mot_deph,
         heating_rate=heating_rate
     )
 
@@ -321,6 +334,8 @@ def ms_gate_state_fidelity(
     z0_1=0.0,
     nsteps=2000,
     seed=None,
+    ideal_unitary=None,
+    mot_deph=np.inf,
     reps=1, phases=[]
 ):
     """
@@ -336,8 +351,11 @@ def ms_gate_state_fidelity(
     psi_full = embed_with_motion(psi_qq, Nmode)
 
     # --- Ideal evolution ---
-    U_ms = ideal_ms_unitary(theta=np.pi/4)
-    psi_ideal = U_ms * psi_qq
+    if ideal_unitary is None:
+        U_ms = ideal_ms_unitary(theta=np.pi/4)
+    else:
+        U_ms = ideal_unitary
+    psi_ideal = U_ms @ psi_qq
     rho_ideal = psi_ideal.proj()
     if reps==1:
         phases = [phase]
@@ -353,6 +371,7 @@ def ms_gate_state_fidelity(
             phase=phases[_],
             T1=T1,
             T2=T2,
+            mot_deph=mot_deph,
             heating_rate=heating_rate,
             z0_0=z0_0,
             z0_1=z0_1,
