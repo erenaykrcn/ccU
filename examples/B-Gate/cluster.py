@@ -111,21 +111,24 @@ def sweep_T1_T2(
 
     return T1_vals, T2_vals, R
 
+
 import json 
 
+
+n_T1, n_T2 = (100, 100)
 T1_vals_, T2_vals_, R1 = sweep_T1_T2(
-        det_error_frac_min=-2, det_error_frac_max=-0.25, 
-        mot_deph_min=-2, mot_deph_max=1, n_T1=500, n_T2=500)
+        det_error_frac_min=-4, det_error_frac_max=-1,
+        mot_deph_min=-2, mot_deph_max=1, n_T1=n_T1, n_T2=n_T2)
 
 data = R1.tolist()
-with open("R1.json", "w") as f:
+with open(f"R1_{n_T1}x{n_T2}.json", "w") as f:
     json.dump(data, f)
 
 T1_vals_, T2_vals_, R2 = sweep_T1_T2(
         T2_min=-2, T2_max=3, 
-        mot_deph_min=-2, mot_deph_max=1, n_T1=500, n_T2=500)
+        mot_deph_min=-2, mot_deph_max=1, n_T1=n_T1, n_T2=n_T2)
 data = R2.tolist()
-with open("R2.json", "w") as f:
+with open(f"R2_{n_T1}x{n_T2}.json", "w") as f:
     json.dump(data, f)
 
 
