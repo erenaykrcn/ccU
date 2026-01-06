@@ -153,7 +153,7 @@ def dynamics_opt(hamil, t, eta, gamma, bootstrap: bool, Vlist_start=None, coeffs
     # perform optimization
     Vlist, f_iter, err_iter = optimize(L, expiH, eta, gamma, Vlist_start, perms, penalty_weight=penalty_weight, **kwargs)
 
-    # visualize optimization progress
+    """# visualize optimization progress
     print(f"err_iter before: {err_iter[0]}")
     print(f"err_iter after {len(err_iter)-1} iterations: {err_iter[-1]}")
     plt.semilogy(range(len(err_iter)), err_iter)
@@ -167,7 +167,7 @@ def dynamics_opt(hamil, t, eta, gamma, bootstrap: bool, Vlist_start=None, coeffs
     plt.ylabel(r"$1 + f(\mathrm{Vlist})/2^L$")
     plt.title(f"optimization target function for a quantum circuit with {len(Vlist)} layers")
     plt.show()
-    print("Last f: ", f_iter[-1])
+    print("Last f: ", f_iter[-1])"""
     # save results to disk
     f_iter = np.array(f_iter)
     err_iter = np.array(err_iter)
@@ -204,6 +204,10 @@ def riemannian_trust_region_optimize(f, retract, gradfunc, hessfunc, x_init, **k
     g_iter = []
     if gfunc is not None:
         g_iter.append(gfunc(x))
+
+    tol = 1e-15          # convergence threshold
+    patience = 5        # number of consecutive small changes required
+    conv_counter = 0
     for k in range(niter):
         grad = gradfunc(x)
         hess = hessfunc(x)
@@ -225,6 +229,19 @@ def riemannian_trust_region_optimize(f, retract, gradfunc, hessfunc, x_init, **k
             x = x_next
         if gfunc is not None:
             g_iter.append(gfunc(x))
+
+        # ---- convergence check block ----
+        if len(g_iter) > 1:
+            if abs(g_iter[-1] - g_iter[-2]) < tol:
+                conv_counter += 1
+            else:
+                conv_counter = 0
+
+            if conv_counter >= patience:
+                #with open(f"./_optlog_12_L{n}_t{t}_log.txt", "a") as file:
+                #    file.write(f"Converged at iteration {k}")
+                print(f"Converged at iteration {k}")
+                break
     return x, f_iter, g_iter
 
 

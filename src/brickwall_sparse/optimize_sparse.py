@@ -158,7 +158,7 @@ def riemannian_trust_region_optimize(f, retract, gradfunc, hessfunc, x_init, **k
     if gfunc is not None:
         g_iter.append(gfunc(x))
 
-    tol = 1e-5          # convergence threshold
+    tol = 1e-15          # convergence threshold
     patience = 5        # number of consecutive small changes required
     conv_counter = 0
     for k in range(niter):
@@ -189,8 +189,9 @@ def riemannian_trust_region_optimize(f, retract, gradfunc, hessfunc, x_init, **k
                 conv_counter = 0
 
             if conv_counter >= patience:
-                with open(f"./_optlog_12_L{n}_t{t}_log.txt", "a") as file:
-                    file.write(f"Converged at iteration {k}")
+                #with open(f"./_optlog_12_L{n}_t{t}_log.txt", "a") as file:
+                #    file.write(f"Converged at iteration {k}")
+                print(f"Converged at iteration {k}")
                 break
 
 
