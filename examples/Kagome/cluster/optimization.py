@@ -17,7 +17,8 @@ from qiskit.quantum_info import state_fidelity
 result_string = None
 niter = 20
 t = 0.1
-layers = 36
+rS = 1
+layers = 72
 
 
 def bonds_from_perms(perms):
@@ -182,9 +183,9 @@ else:
     Vlist_start_2 = Vlist_start
 
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start_2, perms_extended, perms_reduced=perms_ext_reduced,
-                                   control_layers=control_layers, rS=1, niter=niter)
+                                   control_layers=control_layers, rS=rS, niter=niter)
 
-with h5py.File(f"../results/kagome_Heis_L{L}_t{t}_layers{len(Vlist)}.hdf5", "w") as f:
+with h5py.File(f"../results/kagome_Heis_L{L}_t{t}_layers{len(Vlist)}_rS{rS}.hdf5", "w") as f:
     f.create_dataset("Vlist", data=Vlist)
     f.create_dataset("f_iter", data=f_iter)
     f.create_dataset("err_iter", data=err_iter)
