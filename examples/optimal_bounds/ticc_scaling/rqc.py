@@ -45,7 +45,7 @@ for t in [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
 	L = 8
 	latt = qib.lattice.IntegerLattice((L,), pbc=True)
 	field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
-	hamil = qib.IsingHamiltonian(field, 1, 0, 1).as_matrix().toarray()
+	hamil = qib.IsingHamiltonian(field, 1, 1, 1).as_matrix().toarray()
 
 	errs = []
 	for layers in layers_list:
