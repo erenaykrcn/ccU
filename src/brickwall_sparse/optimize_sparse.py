@@ -145,6 +145,8 @@ def riemannian_trust_region_optimize(f, retract, gradfunc, hessfunc, x_init, **k
     maxradius   = kwargs.get("maxradius",   0.1)
     niter       = kwargs.get("niter", 20)
     gfunc       = kwargs.get("gfunc", None)
+    tol = kwargs.get("conv_tol",   1e-10)
+    print("Conv tol. ", tol)
     # transfer keyword arguments for truncated_cg
     tcg_kwargs = {}
     for key in ["maxiter", "abstol", "reltol"]:
@@ -158,7 +160,6 @@ def riemannian_trust_region_optimize(f, retract, gradfunc, hessfunc, x_init, **k
     if gfunc is not None:
         g_iter.append(gfunc(x))
 
-    tol = 1e-15          # convergence threshold
     patience = 5        # number of consecutive small changes required
     conv_counter = 0
     for k in range(niter):
