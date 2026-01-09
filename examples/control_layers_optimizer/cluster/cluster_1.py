@@ -64,6 +64,7 @@ print(np.linalg.norm(ansatz(Vlist_reduced, L, perms_ext_reduced) - expm(
     -1j * t * hamil), ord=2))
 
 eta, gamma = (3, 2)
-niter = 1000
-Vlist, f_iter, err_iter = optimize(L, expm(-1j * t * hamil), eta, gamma, Vlist_start, perms_extended, niter=niter)
+niter = 5000
+Vlist, f_iter, err_iter = optimize(L, expm(-1j * t * hamil), eta, gamma, Vlist_start, perms_extended, 
+	niter=niter, conv_tol=1e-20)
 

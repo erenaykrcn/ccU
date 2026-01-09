@@ -59,8 +59,8 @@ for i, perm in enumerate(perms_extended):
         perms_ext_reduced.append(perm)
 
 eta, gamma = (3, 4)
-niter = 1000
+niter = 5000
 Vlist_ID, f_iter, err_iter = optimize(L, expm(-1j * t * hamil), eta, gamma, 
-	Vlist_start, perms_extended, niter=niter)
+	Vlist_start, perms_extended, niter=niter, conv_tol=1e-20)
 
 
