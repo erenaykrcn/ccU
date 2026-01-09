@@ -18,7 +18,7 @@ rho_0_anc = ket_0 @ ket_0.T
 rho_1_anc = ket_1 @ ket_1.T
 
 import sys
-sys.path.append("../../src/brickwall_ansatz")
+sys.path.append("../../../src/brickwall_ansatz")
 from optimize import optimize
 from utils import construct_heisenberg_local_term
 from ansatz import ansatz
@@ -34,6 +34,11 @@ J = (1, 1, 1)
 h = (3, -1, 1)
 hamil = qib.HeisenbergHamiltonian(field, J, h).as_matrix().toarray()
 t = 0.25
+
+hloc1 = construct_heisenberg_local_term((J[0], 0   ,    0), (0, h[1], 0))
+hloc2 = construct_heisenberg_local_term((0   , J[1],    0), (0, 0, h[2]))
+hloc3 = construct_heisenberg_local_term((0   , 0   , J[2]), (h[0], 0, 0))
+hlocs = (hloc1, hloc2, hloc3)
 
 r = 2
 Vs = [scipy.linalg.expm(-1j*t*hlocs[0]/r), scipy.linalg.expm(-1j*t*hlocs[1]/r), 

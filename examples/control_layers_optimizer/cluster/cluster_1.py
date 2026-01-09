@@ -18,7 +18,7 @@ rho_0_anc = ket_0 @ ket_0.T
 rho_1_anc = ket_1 @ ket_1.T
 
 import sys
-sys.path.append("../../src/brickwall_ansatz")
+sys.path.append("../../../src/brickwall_ansatz")
 from optimize import optimize
 from utils import construct_heisenberg_local_term
 from ansatz import ansatz
