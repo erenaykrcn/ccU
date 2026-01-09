@@ -18,10 +18,10 @@ L = 12
 #J = (1, 1, 1)
 J = (1,  1.1, 0.97)
 h = (3, -1, 1)
-niter = 30
+niter = 100
 t = 0.25
-rS = 5
-layers = 72
+rS = 1
+layers = 80
 
 #result_string = f"kagome_Heis_L12_t{t}_layers{layers}_rS{rS}.hdf5"
 #result_string = f"kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L12_t{t}_layers{layers}_rS{rS}.hdf5"
@@ -152,23 +152,50 @@ elif layers == 72:
     perms_extended = perms_extended*6
     perms_ext_reduced =  [[perms_1[0]]]+ [[perms_1[1]]]  +  [[perms_2[0]]]+ [[perms_2[1]]]  +  [[perms_3[0]]]+ [[perms_3[1]]]
     perms_ext_reduced = perms_ext_reduced*6
+elif layers==80:
+    hloc1 = construct_heisenberg_local_term((J[0], 0   ,    0), (0, h[1], 0), ndim=2)
+    hloc2 = construct_heisenberg_local_term((0   , J[1],    0), (0, 0, h[2]), ndim=2)
+    hloc3 = construct_heisenberg_local_term((0   , 0   , J[2]), (h[0], 0, 0), ndim=2)
+    hlocs = (hloc1, hloc2, hloc3)
 
+    V1 = scipy.linalg.expm(-1j*t*hloc1/2)
+    V2 = scipy.linalg.expm(-1j*t*hloc2/2)
+    V3 = scipy.linalg.expm(-1j*t*hloc3)
 
-non_control_layers = []
-k = 0
-while True:
-    a = 1 + 4*k
-    b = 2 + 4*k
-    if a > len(perms_extended) or b > len(perms_extended):
-        break
-    non_control_layers.extend([a, b])
-    k += 1
-control_layers = []
-for i in range(len(perms_extended)):
-    if i not in non_control_layers:
-        control_layers.append(i)
-print(control_layers)
+    Vlist_start = [np.eye(4), V1, V1, V2, V2, np.eye(4), V3, V3, V2, V2, np.eye(4), V1, V1, np.eye(4), np.eye(4), np.eye(4)]*5
+    Vlist_reduced = [V1, V1, V2, V2, V3, V3, V2, V2, V1, V1, np.eye(4), np.eye(4)]*5
 
+    perms_extended = ([[perms_1[0]]] + [[perms_1[0]],[perms_1[1]]]*2  + [[perms_1[0]]])*3 +\
+                     ([[perms_2[0]]] + [[perms_2[0]],[perms_2[1]]]*2  + [[perms_2[0]]])*3 +\
+                     ([[perms_3[0]]] + [[perms_3[0]],[perms_3[1]]]*2  + [[perms_3[0]]])*3 +\
+                     ([[perms_2[0]]] + [[perms_2[0]],[perms_2[1]]]*2  + [[perms_2[0]]])*3 +\
+                     ([[perms_1[0]]] + [[perms_1[0]],[perms_1[1]]]*2  + [[perms_1[0]]])*3
+    perms_ext_reduced = ([[perms_1[0]],[perms_1[1]]]*2 )*3 +\
+                        ([[perms_2[0]],[perms_2[1]]]*2 )*3 +\
+                        ([[perms_3[0]],[perms_3[1]]]*2 )*3 +\
+                        ([[perms_2[0]],[perms_2[1]]]*2 )*3 +\
+                        ([[perms_1[0]],[perms_1[1]]]*2 )*3
+
+if layers in [36, 72]:
+    non_control_layers = []
+    k = 0
+    while True:
+        a = 1 + 4*k
+        b = 2 + 4*k
+        if a > len(perms_extended) or b > len(perms_extended):
+            break
+        non_control_layers.extend([a, b])
+        k += 1
+    control_layers = []
+    for i in range(len(perms_extended)):
+        if i not in non_control_layers:
+            control_layers.append(i)
+    #print("Control layers length", len(control_layers))
+else:
+    control_layers = []
+    for i in range(5):
+        control_layers += list(range(16*i, 16*(i+1), 5))
+    #print("Control layers length", len(control_layers))
 
 print("Trotter error of the starting point: ", 1-state_fidelity(ansatz_sparse(Vlist_start, L, perms_extended, state), expm_multiply(
     1j * t * hamil, state)))
@@ -177,6 +204,7 @@ print("Trotter error of the starting point: ", 1-state_fidelity(ansatz_sparse(Vl
 print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(Vlist_start, L, perms_extended, state) - expm_multiply(
     1j * t * hamil, state), ord=2) + np.linalg.norm(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, state) - expm_multiply(
     -1j * t * hamil, state), ord=2))/2)
+
 
 from optimize_sparse import optimize
 import h5py
