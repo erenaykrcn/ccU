@@ -14,11 +14,18 @@ from scipy.linalg import expm
 from qiskit.quantum_info import state_fidelity
 
 
-result_string = None
-niter = 20
-t = 0.1
-rS = 1
+L = 12
+#J = (1, 1, 1)
+J = (1,  1.1, 0.97)
+h = (3, -1, 1)
+niter = 30
+t = 0.25
+rS = 5
 layers = 72
+
+#result_string = f"kagome_Heis_L12_t{t}_layers{layers}_rS{rS}.hdf5"
+#result_string = f"kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L12_t{t}_layers{layers}_rS{rS}.hdf5"
+result_string = None
 
 
 def bonds_from_perms(perms):
@@ -90,9 +97,7 @@ bonds_1 = bonds_from_perms(perms_1)
 bonds_2 = bonds_from_perms(perms_2)
 bonds_3 = bonds_from_perms(perms_3)
 all_bonds = bonds_1 + bonds_2 + bonds_3
-L = 12
-J = (1, 1, 1)
-h = (3, -1, 1)
+
 hamil = build_H(L, all_bonds, J, h, 4)
 
 
@@ -185,7 +190,7 @@ else:
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start_2, perms_extended, perms_reduced=perms_ext_reduced,
                                    control_layers=control_layers, rS=rS, niter=niter)
 
-with h5py.File(f"../results/kagome_Heis_L{L}_t{t}_layers{len(Vlist)}_rS{rS}.hdf5", "w") as f:
+with h5py.File(f"../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_t{t}_layers{len(Vlist)}_rS{rS}.hdf5", "w") as f:
     f.create_dataset("Vlist", data=Vlist)
     f.create_dataset("f_iter", data=f_iter)
     f.create_dataset("err_iter", data=err_iter)
