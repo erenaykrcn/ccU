@@ -104,7 +104,7 @@ def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, **kwar
         return err"""
         err = f(vlist)
         print("err: ", 1+err/2**(L+1))
-        with open(f"./BRICKWALL_log_layers{n}.txt", "a") as file:
+        with open(f"./BRICKWALL_log_layers{n}_t.txt", "a") as file:
             file.write(f"Error {1+err/2**(L+1)}\n")
 
         return 1+err/2**(L+1)
