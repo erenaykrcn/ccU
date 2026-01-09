@@ -29,9 +29,6 @@ def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, **kwar
         else:
             f_base = -np.trace(U.conj().T @ ansatz(vlist, L, perms)).real
 
-        print("Real part: ", f_base)
-        #print("Full: ", -np.trace(U.conj().T @ ansatz(vlist, L, perms)) )
-
         if penalty_weight != 0:
             penalty = 0
             for i in range(len(vlist)):
@@ -45,8 +42,7 @@ def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, **kwar
     def gradfunc(vlist):
         gradfunc1 = -ansatz_grad_vector(vlist, L, U_back, perms, flatten=False).real
         magn = [np.linalg.norm(G, ord=2) for G in gradfunc1]
-        print(magn)
-        print(np.sum(np.array(magn)))
+
         if gamma>1:
             gradfunc2 = -ansatz_grad_vector(reduce_list(
                 vlist, gamma, eta), L, U, reduce_list(perms, gamma, eta), flatten=False).real
@@ -97,15 +93,21 @@ def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, **kwar
     # quantify error by spectral norm
     def errfunc(vlist): 
         """if gamma>1:
-            return np.linalg.norm(
+            err =  np.linalg.norm(
             ansatz(reduce_list(
                 vlist, gamma, eta), L, reduce_list(perms, gamma, eta)) - U, ord=2) + np.linalg.norm(
             ansatz(vlist, L, perms) - U_back, ord=2)
+            
         else:
             M = np.asarray(ansatz(vlist, L, perms), dtype=np.complex128)
             err = np.linalg.norm(M - U, ord=2)
-            return err"""
-        return f(vlist)
+        return err"""
+        err = f(vlist)
+        print("err: ", 1+err/2**(L+1))
+        with open(f"./BRICKWALL_log_layers{n}.txt", "a") as file:
+            file.write(f"Error {1+err/2**(L+1)}\n")
+
+        return 1+err/2**(L+1)
 
     kwargs["gfunc"] = errfunc
     # perform optimization
@@ -226,7 +228,7 @@ def riemannian_trust_region_optimize(f, retract, gradfunc, hessfunc, x_init, **k
         elif rho > 0.75 and on_boundary:
             # enlarge radius
             radius = min(2 * radius, maxradius)
-        print("Radius ", radius)
+        #print("Radius ", radius)
         if rho > rho_trust:
             x = x_next
         if gfunc is not None:
