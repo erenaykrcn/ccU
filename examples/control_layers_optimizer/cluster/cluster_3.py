@@ -6,6 +6,13 @@ import qib
 import matplotlib.pyplot as plt
 import scipy
 import h5py
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--t", type=float, required=True)
+args = parser.parse_args()
+t = args.t
+print("t =", t)
 
 
 I2 = np.eye(2)
