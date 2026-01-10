@@ -12,6 +12,7 @@ from scipy.sparse.linalg import expm_multiply
 from qiskit.quantum_info import random_statevector
 from scipy.linalg import expm
 from qiskit.quantum_info import state_fidelity
+import h5py
 
 
 L = 12
@@ -21,11 +22,12 @@ h = (3, -1, 1)
 niter = 100
 t = 0.1
 rS = 1
-layers = 48
+layers = 19
 
 #result_string = f"kagome_Heis_L12_t{t}_layers{layers}_rS{rS}.hdf5"
 #result_string = f"kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L12_t{t}_layers{layers}_rS{rS}.hdf5"
 result_string = None
+bootstrap = "kagome_Heis11.10.973-11_L12_t0.1_layers10_rS1.hdf5"
 
 
 def bonds_from_perms(perms):
@@ -175,25 +177,47 @@ elif layers==80:
                         ([[perms_3[0]],[perms_3[1]]]*2 )*3 +\
                         ([[perms_2[0]],[perms_2[1]]]*2 )*3 +\
                         ([[perms_1[0]],[perms_1[1]]]*2 )*3
-elif layers==48:
-    hloc1 = construct_heisenberg_local_term((J[0], 0   ,    0), (0, h[1], 0), ndim=2)
-    hloc2 = construct_heisenberg_local_term((0   , J[1],    0), (0, 0, h[2]), ndim=2)
-    hloc3 = construct_heisenberg_local_term((0   , 0   , J[2]), (h[0], 0, 0), ndim=2)
-    hlocs = (hloc1, hloc2, hloc3)
+elif layers == 10:
+    non_control_layers = 6
 
-    V1 = scipy.linalg.expm(-1j*t*hloc1)
-    V2 = scipy.linalg.expm(-1j*t*hloc2)
-    V3 = scipy.linalg.expm(-1j*t*hloc3)
+    hloc = construct_heisenberg_local_term((J[0], J[1], J[2]), (h[0], h[1], h[2]))
+    V = scipy.linalg.expm(-1j*t*hloc/(non_control_layers//6))
+    Vlist_reduced = [V for i in range(non_control_layers)]
 
-    Vlist_start = [np.eye(4), V1, V1, V2, V2, np.eye(4), V3, V3, V2, V2, np.eye(4), V1, V1, np.eye(4), np.eye(4), np.eye(4)]*3
-    Vlist_reduced = [V1, V1, V2, V2, V3, V3, V2, V2, V1, V1, np.eye(4), np.eye(4)]*3
+    if result_string is not None:
+        with h5py.File(f'../results/{result_string}') as f:
+            Vlist_start  =  f["Vlist"][:]
 
-    perms_extended = ([[perms_1[0]]] + [[perms_1[0]],[perms_1[1]]]*2  + [[perms_1[0]]])*3 +\
-                     ([[perms_2[0]]] + [[perms_2[0]],[perms_2[1]]]*2  + [[perms_2[0]]])*3 +\
-                     ([[perms_3[0]]] + [[perms_3[0]],[perms_3[1]]]*2  + [[perms_3[0]]])*3
-    perms_ext_reduced = ([[perms_1[0]],[perms_1[1]]]*2 )*3 +\
-                        ([[perms_2[0]],[perms_2[1]]]*2 )*3 +\
-                        ([[perms_3[0]],[perms_3[1]]]*2 )*3
+    control_layers = [0, 3, 6, 9]
+    perms_extended = (([[perms_1[0]]] + [[perms_1[0]],[perms_1[1]]]) +\
+                     ([[perms_2[0]]] + [[perms_2[0]],[perms_2[1]]]) +\
+                     ([[perms_3[0]]] + [[perms_3[0]],[perms_3[1]]]))*1 + [[perms_3[0]]]
+                     
+    perms_ext_reduced = ([[perms_1[0]],[perms_1[1]]] + [[perms_2[0]],[perms_2[1]]] + [[perms_3[0]],[perms_3[1]]]
+        )*1
+elif layers == 19:
+    non_control_layers = 12
+    control_layers = [0, 3, 6, 9, 12, 15, 18]
+
+    hloc = construct_heisenberg_local_term((J[0], J[1], J[2]), (h[0], h[1], h[2]))
+    V = scipy.linalg.expm(-1j*t*hloc/(non_control_layers//6))
+    Vlist_reduced = [V for i in range(non_control_layers)]
+
+    if bootstrap is not None:
+        with h5py.File(f'../results/{bootstrap}') as f:
+            Vlist_start_old  =  f["Vlist"][:]
+    Vlist_start = [V for V in Vlist_start_old] + [np.eye(4) for i in range(9)]
+    
+    perms_extended = [[perms_1[0]]] + [[perms_1[0]],[perms_1[1]]] +\
+                     [[perms_2[0]]] + [[perms_2[0]],[perms_2[1]]] +\
+                     [[perms_3[0]]] + [[perms_3[0]],[perms_3[1]]] +\
+                     [[perms_3[0]]] + [[perms_1[0]],[perms_1[1]]] +\
+                     [[perms_2[0]]] + [[perms_2[0]],[perms_2[1]]] +\
+                     [[perms_3[0]]] + [[perms_3[0]],[perms_3[1]]] + [[perms_3[0]]]
+                     
+    perms_ext_reduced = ([[perms_1[0]],[perms_1[1]]] + [[perms_2[0]],[perms_2[1]]] + [[perms_3[0]],[perms_3[1]]]
+        )*2
+
                         
 
 if layers in [36, 72]:
@@ -219,6 +243,7 @@ elif layers==48:
     for i in range(3):
         control_layers += list(range(16*i, 16*(i+1), 5))
     print("Control layers length", control_layers)
+
 
 print("Trotter error of the starting point: ", 1-state_fidelity(ansatz_sparse(Vlist_start, L, perms_extended, state), expm_multiply(
     1j * t * hamil, state)))
