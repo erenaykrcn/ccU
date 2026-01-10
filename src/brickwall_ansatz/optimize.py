@@ -19,6 +19,7 @@ def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, **kwar
     indices = []
     for i in range(gamma):
         indices += list(range(eta*i+1+i, eta*(i+1)+1+i))
+    t = kwargs.get("t", "?")
 
     # target function
     def f(vlist):
@@ -104,10 +105,10 @@ def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, **kwar
         return err"""
         err = f(vlist)
         print("err: ", 1+err/2**(L+1))
-        with open(f"./BRICKWALL_log_layers{n}_t.txt", "a") as file:
+        with open(f"./_BRICKWALL_log_layers{n}_t{t}.txt", "a") as file:
             file.write(f"Error {1+err/2**(L+1)}\n")
-
         return 1+err/2**(L+1)
+
 
     kwargs["gfunc"] = errfunc
     # perform optimization
