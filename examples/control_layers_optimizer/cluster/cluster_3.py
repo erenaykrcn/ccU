@@ -65,7 +65,7 @@ for layers in range(n_control_layers-1, 5*(n_control_layers-1), n_control_layers
 	"""
 
 	Vlist_ID, f_iter, err_iter = optimize(L, expm(-1j * t * hamil), eta, n_control_layers-1,
-		Vlist_start, perms_extended, niter=niter, conv_tol=1e-15)
+		Vlist_start, perms_extended, niter=niter, conv_tol=1e-15, t=t)
 
 	with h5py.File(f"../results/ticc_Heis_cLayers{n_control_layers}_L{L}_t{t}_layers{len(Vlist_start)}.hdf5", "w") as f:
 	    f.create_dataset("Vlist", data=Vlist_ID)
