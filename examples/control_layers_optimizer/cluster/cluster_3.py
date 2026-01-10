@@ -42,7 +42,7 @@ h = (3, -1, 1)
 hamil = qib.HeisenbergHamiltonian(field, J, h).as_matrix().toarray()
 n_control_layers = 5
 
-t = 0.5
+
 niter = 2000
 for layers in range(n_control_layers-1, 5*(n_control_layers-1), n_control_layers-1):
 	eta = layers//(n_control_layers-1)
