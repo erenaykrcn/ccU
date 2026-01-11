@@ -13,10 +13,9 @@ from qiskit.quantum_info import state_fidelity
 def err(vlist, Uv, v, L, perms):
     return -np.vdot(Uv, ansatz_sparse(vlist, L, perms, v)).real
 
-
 def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers=[], rS=1, log=False, 
     log_txt='', **kwargs):
-    n = len(Vlist_start)log_txt
+    n = len(Vlist_start)
     indices = []
     for i in range(len(Vlist_start)):
         if i not in control_layers:
