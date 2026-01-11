@@ -19,15 +19,15 @@ L = 12
 #J = (1, 1, 1)
 J = (1,  1.1, 0.97)
 h = (3, -1, 1)
-niter = 100
-t = 0.1
+niter = 30
+t = 0.5
 rS = 1
-layers = 19
+layers = 72
 
 #result_string = f"kagome_Heis_L12_t{t}_layers{layers}_rS{rS}.hdf5"
 #result_string = f"kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L12_t{t}_layers{layers}_rS{rS}.hdf5"
 result_string = None
-bootstrap = "kagome_Heis11.10.973-11_L12_t0.1_layers10_rS1.hdf5"
+bootstrap = None
 
 
 def bonds_from_perms(perms):
@@ -177,6 +177,7 @@ elif layers==80:
                         ([[perms_3[0]],[perms_3[1]]]*2 )*3 +\
                         ([[perms_2[0]],[perms_2[1]]]*2 )*3 +\
                         ([[perms_1[0]],[perms_1[1]]]*2 )*3
+
 elif layers == 10:
     non_control_layers = 6
 
@@ -189,34 +190,24 @@ elif layers == 10:
             Vlist_start  =  f["Vlist"][:]
 
     control_layers = [0, 3, 6, 9]
-    perms_extended = (([[perms_1[0]]] + [[perms_1[0]],[perms_1[1]]]) +\
+    perms_extended = ([[perms_1[0]]] + [[perms_1[0]],[perms_1[1]]]) +\
                      ([[perms_2[0]]] + [[perms_2[0]],[perms_2[1]]]) +\
-                     ([[perms_3[0]]] + [[perms_3[0]],[perms_3[1]]]))*1 + [[perms_3[0]]]
+                     ([[perms_3[0]]] + [[perms_3[0]],[perms_3[1]]]) +\
+                      [[perms_3[0]]]
                      
     perms_ext_reduced = ([[perms_1[0]],[perms_1[1]]] + [[perms_2[0]],[perms_2[1]]] + [[perms_3[0]],[perms_3[1]]]
         )*1
-elif layers == 19:
-    non_control_layers = 12
-    control_layers = [0, 3, 6, 9, 12, 15, 18]
 
+elif layers == 12:
+    non_control_layers = 12
+    control_layers = []
     hloc = construct_heisenberg_local_term((J[0], J[1], J[2]), (h[0], h[1], h[2]))
     V = scipy.linalg.expm(-1j*t*hloc/(non_control_layers//6))
-    Vlist_reduced = [V for i in range(non_control_layers)]
-
-    if bootstrap is not None:
-        with h5py.File(f'../results/{bootstrap}') as f:
-            Vlist_start_old  =  f["Vlist"][:]
-    Vlist_start = [V for V in Vlist_start_old] + [np.eye(4) for i in range(9)]
+    Vlist_start = [V for i in range(layers)]
     
-    perms_extended = [[perms_1[0]]] + [[perms_1[0]],[perms_1[1]]] +\
-                     [[perms_2[0]]] + [[perms_2[0]],[perms_2[1]]] +\
-                     [[perms_3[0]]] + [[perms_3[0]],[perms_3[1]]] +\
-                     [[perms_3[0]]] + [[perms_1[0]],[perms_1[1]]] +\
-                     [[perms_2[0]]] + [[perms_2[0]],[perms_2[1]]] +\
-                     [[perms_3[0]]] + [[perms_3[0]],[perms_3[1]]] + [[perms_3[0]]]
-                     
-    perms_ext_reduced = ([[perms_1[0]],[perms_1[1]]] + [[perms_2[0]],[perms_2[1]]] + [[perms_3[0]],[perms_3[1]]]
-        )*2
+    perms_extended = ([[perms_1[0]],[perms_1[1]]] + [[perms_2[0]],[perms_2[1]]] + [[perms_3[0]],[perms_3[1]]]
+        )*2                     
+    perms_ext_reduced = None
 
                         
 
@@ -244,14 +235,14 @@ elif layers==48:
         control_layers += list(range(16*i, 16*(i+1), 5))
     print("Control layers length", control_layers)
 
-
-print("Trotter error of the starting point: ", 1-state_fidelity(ansatz_sparse(Vlist_start, L, perms_extended, state), expm_multiply(
-    1j * t * hamil, state)))
-print("Trotter error of the starting point: ", 1-state_fidelity(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, state), expm_multiply(
-    -1j * t * hamil, state)))
-print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(Vlist_start, L, perms_extended, state) - expm_multiply(
-    1j * t * hamil, state), ord=2) + np.linalg.norm(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, state) - expm_multiply(
-    -1j * t * hamil, state), ord=2))/2)
+if layers != 12:
+    print("Trotter error of the starting point: ", 1-state_fidelity(ansatz_sparse(Vlist_start, L, perms_extended, state), expm_multiply(
+        1j * t * hamil, state)))
+    print("Trotter error of the starting point: ", 1-state_fidelity(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, state), expm_multiply(
+        -1j * t * hamil, state)))
+    print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(Vlist_start, L, perms_extended, state) - expm_multiply(
+        1j * t * hamil, state), ord=2) + np.linalg.norm(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, state) - expm_multiply(
+        -1j * t * hamil, state), ord=2))/2)
 
 
 from optimize_sparse import optimize
