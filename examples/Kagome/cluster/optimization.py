@@ -17,10 +17,11 @@ import h5py
 
 L = 12
 #J = (1, 1, 1)
-J = (1,  1.1, 0.97)
+#J = (1,  1.1, 0.97)
+J = (1, 1.5, 1.5)
 h = (3, -1, 1)
 niter = 30
-t = 0.5
+t = 0.25
 rS = 1
 layers = 72
 
@@ -255,7 +256,9 @@ else:
     Vlist_start_2 = Vlist_start
 
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start_2, perms_extended, perms_reduced=perms_ext_reduced,
-                                   control_layers=control_layers, rS=rS, niter=niter)
+                                   control_layers=control_layers, rS=rS, niter=niter, 
+                                   log_txt=f'{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}')
+
 
 with h5py.File(f"../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_t{t}_layers{len(Vlist)}_rS{rS}.hdf5", "w") as f:
     f.create_dataset("Vlist", data=Vlist)

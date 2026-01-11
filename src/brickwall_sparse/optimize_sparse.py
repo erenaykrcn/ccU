@@ -14,8 +14,9 @@ def err(vlist, Uv, v, L, perms):
     return -np.vdot(Uv, ansatz_sparse(vlist, L, perms, v)).real
 
 
-def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers=[], rS=1, log=False, **kwargs):
-    n = len(Vlist_start)
+def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers=[], rS=1, log=False, 
+    log_txt='', **kwargs):
+    n = len(Vlist_start)log_txt
     indices = []
     for i in range(len(Vlist_start)):
         if i not in control_layers:
@@ -101,10 +102,6 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
                 e += 1-state_fidelity(ansatz_sparse(vlist, L, perms, v), expm_multiply(-1j * t * hamil, v))
             print("Current error: ", e/rS)
 
-            if log:
-                with open(f"log_layers{n}_t{t}.txt", "a") as file:
-                    file.write(f"Error {e/rS}\n")
-
             return e/rS
         else:
             vlist_reduced = []
@@ -117,7 +114,7 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
                 e += 1-state_fidelity(ansatz_sparse(vlist, L, perms, v), expm_multiply(1j * t * hamil, v)) 
                 e += 1-state_fidelity(ansatz_sparse(vlist_reduced, L, perms_reduced, v), expm_multiply(-1j * t * hamil, v))
 
-            with open(f"./_optlog_12_L{n}_t{t}_log_rS{rS}.txt", "a") as file:
+            with open(f"./_optlog{log_txt}_12_L{n}_t{t}_log_rS{rS}.txt", "a") as file:
                 file.write(f"Error {e/(2*rS)}\n")
             print("Current error: ", e/(2*rS))
             return e/(2*rS)
