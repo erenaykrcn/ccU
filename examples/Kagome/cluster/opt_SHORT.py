@@ -21,7 +21,8 @@ niter = 30
 t = 0.25
 rS = 1
 result_string = None
-custom_result_string = ""
+custom_result_string = "NEWER_ANSATZ"
+layers = 36
 
 
 def bonds_from_perms(perms):
@@ -109,23 +110,19 @@ h = (3, -1, 1)
 
 L = 12
 hamil = build_H(L, all_bonds, J, h, 4)
-
-t = 0.25
-layers = 36
 hloc = construct_heisenberg_local_term((J[0], J[1], J[2]), (h[0], h[1], h[2]), ndim=2)
 V = scipy.linalg.expm(-1j*t*hloc/(layers//6))
 Vlist_reduced = [V for i in range(layers)]
-Vlist_start = [np.eye(4), V, V, V, V, V, np.eye(4), V, V, V, V, V, np.eye(4), V, V, V, V, V, 
-               np.eye(4), V, V, V, V, V, np.eye(4), V, V, V, V, V, np.eye(4), V, V, V, V, V, np.eye(4)]
-control = list(range(0, 37, 6))
+Vlist_start = [np.eye(4), V, V, V, V, V, V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V, V,
+               np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4)]
+control = list(range(0, 43, 7))
 
 perms_reduced = [p1, p2, p3, p4, p5, p6]*(layers//6)
 perms_ext = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]  + ps + [p4] +  ps + [p5] + ps + [p1]
 
 
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_ext, perms_reduced=perms_reduced, 
-                                       control_layers=control, rS=rS, niter=niter)
-
+                                       control_layers=control, rS=rS, niter=niter, log_text=custom_result_string)
 
 
 with h5py.File(f"../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_t{t}_layers{len(Vlist)}_rS{rS}_{custom_result_string}.hdf5", "w") as f:
