@@ -29,6 +29,7 @@ layers = 72
 #result_string = f"kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L12_t{t}_layers{layers}_rS{rS}.hdf5"
 result_string = None
 bootstrap = None
+custom_result_string = ""
 
 
 def bonds_from_perms(perms):
@@ -257,10 +258,10 @@ else:
 
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start_2, perms_extended, perms_reduced=perms_ext_reduced,
                                    control_layers=control_layers, rS=rS, niter=niter, 
-                                   log_txt=f'{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}')
+                                   log_txt=f'{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_{custom_result_string}')
 
 
-with h5py.File(f"../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_t{t}_layers{len(Vlist)}_rS{rS}.hdf5", "w") as f:
+with h5py.File(f"../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_t{t}_layers{len(Vlist)}_rS{rS}_{custom_result_string}.hdf5", "w") as f:
     f.create_dataset("Vlist", data=Vlist)
     f.create_dataset("f_iter", data=f_iter)
     f.create_dataset("err_iter", data=err_iter)
