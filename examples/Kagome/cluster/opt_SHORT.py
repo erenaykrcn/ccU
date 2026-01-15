@@ -22,7 +22,7 @@ t = 0.6
 rS = 1
 result_string = None
 custom_result_string = ""
-layers = 54
+layers = 64
 # ext layers: 22
 
 def bonds_from_perms(perms):
@@ -130,7 +130,7 @@ elif layers==18:
     perms_reduced = ps*(layers//6)
     perms_ext = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]
 
-elif layers==54:
+elif layers==64:
     control = list(range(0, 64, 7))
     print('Control Layers: ', control)
     perms_reduced = [p1, p2, p3, p4, p5, p6]*(layers//6)
