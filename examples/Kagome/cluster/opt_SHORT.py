@@ -18,12 +18,12 @@ from functools import reduce
 
 
 niter = 100
-t = 0.1
+t = 0.05
 rS = 1
 result_string = None
 custom_result_string = ""
 layers = 18
-
+# ext layers: 22
 
 def bonds_from_perms(perms):
     """
@@ -130,6 +130,10 @@ elif layers==18:
     perms_reduced = ps*(layers//6)
     perms_ext = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]
 
+
+if result_string is not None:
+    with h5py.File(f'../results/{result_string}') as f:
+        Vlist_start  =  f["Vlist"][:]
 
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_ext, perms_reduced=perms_reduced, 
                                        control_layers=control, rS=rS, niter=niter, log_txt=custom_result_string)
