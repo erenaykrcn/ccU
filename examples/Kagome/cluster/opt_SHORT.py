@@ -17,12 +17,12 @@ from scipy.linalg import expm
 from functools import reduce
 
 
-niter = 30
-t = 0.25
+niter = 100
+t = 0.1
 rS = 1
 result_string = None
-custom_result_string = "NEWER_ANSATZ"
-layers = 36
+custom_result_string = ""
+layers = 18
 
 
 def bonds_from_perms(perms):
@@ -107,25 +107,35 @@ bonds_3 = bonds_from_perms(perms_3)
 all_bonds = bonds_1 + bonds_2 + bonds_3
 J = (1, 1, 1)
 h = (3, -1, 1)
-
 L = 12
 hamil = build_H(L, all_bonds, J, h, 4)
 hloc = construct_heisenberg_local_term((J[0], J[1], J[2]), (h[0], h[1], h[2]), ndim=2)
 V = scipy.linalg.expm(-1j*t*hloc/(layers//6))
 Vlist_reduced = [V for i in range(layers)]
-Vlist_start = [np.eye(4), V, V, V, V, V, V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V, V,
-               np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4)]
-control = list(range(0, 43, 7))
 
-perms_reduced = [p1, p2, p3, p4, p5, p6]*(layers//6)
-perms_ext = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]  + ps + [p4] +  ps + [p5] + ps + [p1]
+if layers==36:
+    #Vlist_start = [np.eye(4), V, V, V, V, V, V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V, V,
+    #               np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4)]
+    control = list(range(0, 43, 7))
+    perms_reduced = [p1, p2, p3, p4, p5, p6]*(layers//6)
+    perms_ext = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]  + ps + [p3] +  ps + [p5] + ps + [p2]
+    with h5py.File(f"../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_t{t/2}_layers22_rS{rS}_opt_SHORT{custom_result_string}.hdf5", 'r') as f:
+        Vlist_start_2  =  f["Vlist"][:]
+    Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
+    Vlist_start[21] = Vlist_start_2[0] @ Vlist_start_2[-1]
+
+elif layers==18:
+    Vlist_start = [np.eye(4), V, V, V, V, V, V, np.eye(4), V, V, V, V, V, V, np.eye(4), V, V, V, V, V, V, np.eye(4)]
+    control = [0, 7, 14, 21]
+    perms_reduced = ps*(layers//6)
+    perms_ext = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]
 
 
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start, perms_ext, perms_reduced=perms_reduced, 
-                                       control_layers=control, rS=rS, niter=niter, log_text=custom_result_string)
+                                       control_layers=control, rS=rS, niter=niter, log_txt=custom_result_string)
 
 
-with h5py.File(f"../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_t{t}_layers{len(Vlist)}_rS{rS}_{custom_result_string}.hdf5", "w") as f:
+with h5py.File(f"../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_t{t}_layers{len(Vlist)}_rS{rS}_opt_SHORT{custom_result_string}.hdf5", "w") as f:
     f.create_dataset("Vlist", data=Vlist)
     f.create_dataset("f_iter", data=f_iter)
     f.create_dataset("err_iter", data=err_iter)
