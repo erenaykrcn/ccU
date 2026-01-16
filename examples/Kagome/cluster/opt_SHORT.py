@@ -22,7 +22,7 @@ t = 0.6
 rS = 1
 result_string = None
 custom_result_string = ""
-layers = 64
+layers = 54
 # ext layers: 22
 
 def bonds_from_perms(perms):
@@ -117,7 +117,7 @@ if layers==36:
     #Vlist_start = [np.eye(4), V, V, V, V, V, V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V, V,
     #               np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4)]
     control = list(range(0, 43, 7))
-    perms_reduced = [p1, p2, p3, p4, p5, p6]*(layers//6)
+    perms_reduced = [p1, p2, p3, p4, p5, p6]*6
     perms_ext = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]  + ps + [p3] +  ps + [p5] + ps + [p2]
     with h5py.File(f"../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_t{t/2}_layers22_rS{rS}_opt_SHORT{custom_result_string}.hdf5", 'r') as f:
         Vlist_start_2  =  f["Vlist"][:]
@@ -127,13 +127,13 @@ if layers==36:
 elif layers==18:
     Vlist_start = [np.eye(4), V, V, V, V, V, V, np.eye(4), V, V, V, V, V, V, np.eye(4), V, V, V, V, V, V, np.eye(4)]
     control = [0, 7, 14, 21]
-    perms_reduced = ps*(layers//6)
+    perms_reduced = ps*3
     perms_ext = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]
 
-elif layers==64:
+elif layers==54:
     control = list(range(0, 64, 7))
     print('Control Layers: ', control)
-    perms_reduced = [p1, p2, p3, p4, p5, p6]*(layers//6)
+    perms_reduced = [p1, p2, p3, p4, p5, p6]*6
     perms_ext = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]  + ps + [p3] +  ps + [p5] + ps + [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2] 
     with h5py.File(f"../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_t{round(t/3, 3)}_layers22_rS{rS}_opt_SHORT{custom_result_string}.hdf5", 'r') as f:
         Vlist_start_2  =  f["Vlist"][:]
