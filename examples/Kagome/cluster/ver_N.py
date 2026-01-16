@@ -15,15 +15,21 @@ import quimb
 from quimb.tensor.tensor_2d_tebd import TEBD2D, LocalHam2D
 import h5py
 
+import sys
+sys.path.append("../../../src/brickwall_sparse")
+from utils_sparse import construct_heisenberg_local_term
+
 
 chi_overlap = 25
-Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (3, 4, 5, 29, 3)
-#Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (4, 3, 2, 12, 2)
+Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (3, 4, 5, 32, 3)
+#Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (4, 3, 2, 15, 2)
 cutoff = 1e-12
-layers=36
+layers = 22
 t = 0.1
-trotter_order, trotter_step = (1, 3)
+trotter_order, trotter_step = (2, 1)
 trotter_order_ref, trotter_step_ref = (2, 6)
+
+rS = 1
 
 L = Lx*Lx*3
 lat = Kagome(Lx, Lx, [SpinHalfSite() for _ in range(3)], bc='periodic')
@@ -32,35 +38,41 @@ A = np.zeros((N, N), dtype=int)
 J = (1, 1, 1)
 h = (3, -1, 1)
 
-perms_1_ = []
-for i in range(Lx):
-    perms_1_ += [i*3*Lx+j for j in range(2*Lx)]
-perms_2_ = []
-for i in range(Lx):
-    for j in range(Lx):
-        perms_2_ += [2*i+j*(Lx*3), 2*i+j*(Lx*3)+(Lx*2-i)]
-perms_1 = [perms_1_, []]
-for i in range(Lx):
-    perms_1[1] += list(np.roll(np.array(perms_1_[2*Lx*i:2*Lx*(i+1)]), 1))
-perms_2 = [perms_2_, []]
-for i in range(Lx):
-    perms_2[1] += list(np.roll(np.array(perms_2_[2*Lx*i:2*Lx*(i+1)]), 1))
-
-
-if Lx== 3:
-    perms_3 = [[1, 6, 3, 7, 10, 15, 5, 8, 12, 16, 19, 24, 14, 17, 21, 25, 23, 26],
-               [6, 1, 7, 10, 15, 3, 8, 12, 16, 19, 24, 5, 17, 21, 25, 14, 26, 23]]
-elif Lx==2:
+if Lx>2:
+    perms_1_ = []
+    for i in range(Lx):
+        perms_1_ += [i*3*Lx+j for j in range(2*Lx)]
+    perms_2_ = []
+    for i in range(Lx):
+        for j in range(Lx):
+            perms_2_ += [2*i+j*(Lx*3), 2*i+j*(Lx*3)+(Lx*2-i)]
+    perms_1 = [perms_1_, []]
+    for i in range(Lx):
+        perms_1[1] += list(np.roll(np.array(perms_1_[2*Lx*i:2*Lx*(i+1)]), 1))
+    perms_2 = [perms_2_, []]
+    for i in range(Lx):
+        perms_2[1] += list(np.roll(np.array(perms_2_[2*Lx*i:2*Lx*(i+1)]), 1))
+    if Lx== 3:
+        perms_3 = [[1, 6, 3, 7, 10, 15, 5, 8, 12, 16, 19, 24, 14, 17, 21, 25, 23, 26],
+                   [6, 1, 7, 10, 15, 3, 8, 12, 16, 19, 24, 5, 17, 21, 25, 14, 26, 23]]
+    elif Lx==2:
+        perms_3 = [[1, 4, 9, 11, 3, 5, 7, 10], [4, 1, 11, 9, 5, 7, 10, 3]]
+    elif Lx ==4:
+        perms_3 = [[1, 8, 3, 9, 13, 20, 5, 10, 15, 21, 25, 32, 7, 11, 17, 22, 27, 33, 37, 44, 19, 23, 29, 34, 39, 45, 31, 35, 41, 46, 43, 47],
+        [8, 1, 9, 13, 20, 23, 10, 15, 21, 25, 32, 5, 11, 17, 22, 27, 33, 37, 44, 7, 23, 29, 34, 39, 45, 19, 35, 41, 46, 31, 47, 43]]
+else:
+    perms_1 = [[0, 4, 6, 10, 2, 5, 8, 11], [4, 6, 10, 0, 5, 8, 11, 2]]
+    perms_2 = [[0, 1, 2, 3, 6, 7, 8, 9], [1, 2, 3, 0, 7, 8, 9, 6]]
     perms_3 = [[1, 4, 9, 11, 3, 5, 7, 10], [4, 1, 11, 9, 5, 7, 10, 3]]
-elif Lx ==4:
-    perms_3 = [[1, 8, 3, 9, 13, 20, 5, 10, 15, 21, 25, 32, 7, 11, 17, 22, 27, 33, 37, 44, 19, 23, 29, 34, 39, 45, 31, 35, 41, 46, 43, 47],
-    [8, 1, 9, 13, 20, 23, 10, 15, 21, 25, 32, 5, 11, 17, 22, 27, 33, 37, 44, 7, 23, 29, 34, 39, 45, 19, 35, 41, 46, 31, 47, 43]]
+p1, p2, p3, p4, p5, p6 = ([perms_2[0]], [perms_2[1]], [perms_1[0]], [perms_1[1]], [perms_3[0]], [perms_3[1]])
+ps = [p1, p2, p3, p4, p5, p6]
+for i in range(6):
+    print(f"p{i} ", ps[i])
 
 for perm in perms_1+perms_2+perms_3:
     for i in range(len(perm)//2):
         A[perm[2*i], perm[2*i+1]] = 1
         A[perm[2*i+1], perm[2*i]] = 1
-print(perms_1)
 
 # Pauli and identity
 X = np.array([[0, 1], [1, 0]])
@@ -116,11 +128,18 @@ def trotter(peps, t, L, J,  perms, dag=False,
     nsteps = abs(int(np.ceil(t / dt)))
     dt = t / nsteps
 
-    hloc1 = J[0]*np.kron(X, X) + h[0]/4 * (np.kron(X, I2)+np.kron(I2, X))
-    hloc2 = J[1]*np.kron(Y, Y) + h[1]/4 * (np.kron(Y, I2)+np.kron(I2, Y))
-    hloc3 = J[2]*np.kron(Z, Z) + h[2]/4 * (np.kron(Z, I2)+np.kron(I2, Z))
-    hlocs = (hloc1, hloc2, hloc3)
-
+    #hloc1 = J[0]*np.kron(X, X) + h[0]/4 * (np.kron(X, I2)+np.kron(I2, X))
+    #hloc2 = J[1]*np.kron(Y, Y) + h[1]/4 * (np.kron(Y, I2)+np.kron(I2, Y))
+    #hloc3 = J[2]*np.kron(Z, Z) + h[2]/4 * (np.kron(Z, I2)+np.kron(I2, Z))
+    #hlocs = (hloc1, hloc2, hloc3)
+    hloc1 = construct_heisenberg_local_term((0, 0   ,    0), (0, h[1],    0), ndim=2)
+    hloc2 = construct_heisenberg_local_term((J[0], 0   ,    0), (0, 0,    0), ndim=2)
+    hloc3 = construct_heisenberg_local_term((0   ,    0, 0), (0, 0, h[2]   ), ndim=2)
+    hloc4 = construct_heisenberg_local_term((0   ,    J[1], 0), (0, 0, 0   ), ndim=2)
+    hloc5 = construct_heisenberg_local_term((0   , 0   , 0), (h[0], 0,    0), ndim=2)
+    hloc6 = construct_heisenberg_local_term((0   , 0   , J[2]), (0, 0,    0), ndim=2)
+    hlocs = (hloc1, hloc2, hloc3, hloc4, hloc5, hloc6)
+    
     # Suzuki splitting
     if trotter_order > 1:
         sm = oc.SplittingMethod.suzuki(len(hlocs), int(np.log(trotter_order)/np.log(2)))
@@ -166,6 +185,7 @@ def ccU(peps, Vlist, perms_extended, control_layers, dagger=False, max_bond_dim=
                 gc.collect()
     return peps
 
+"""
 if layers==36:
     perms_extended = [[perms_1[0]]] + [[perms_1[0]]]+ [[perms_1[1]]] + [[perms_1[0]], [perms_2[0]]] +\
       [[perms_2[0]]]+ [[perms_2[1]]]  + [[perms_2[0]], [perms_3[0]]] + [[perms_3[0]]]+ [[perms_3[1]]]  + [[perms_3[0]]]
@@ -178,7 +198,6 @@ elif layers==72:
     perms_extended = perms_extended*5
     perms_ext_reduced = [perms_1] + [perms_2] + [perms_3]
     perms_ext_reduced = perms_ext_reduced*5
-
 non_control_layers = []
 k = 0
 while True:
@@ -192,13 +211,26 @@ control_layers = []
 for i in range(len(perms_extended)):
     if i not in non_control_layers:
         control_layers.append(i)
+"""
+if layers==22:
+    control_layers = [0, 7, 14, 21]
+    perms_ext_reduced = ps*3
+    perms_extended = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]
+elif layers==43:
+    control_layers = list(range(0, 43, 7))
+    perms_ext_reduced = [p1, p2, p3, p4, p5, p6]*6
+    perms_extended = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]  + ps + [p3] +  ps + [p5] + ps + [p2]
+elif layers==64:
+    control_layers = list(range(0, 64, 7))
+    perms_ext_reduced = [p1, p2, p3, p4, p5, p6]*9
+    perms_extended = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]  + ps + [p3] +  ps + [p5] + ps + [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2] 
 
-Vlists = {}
-for t in [t]:
-    with h5py.File(f'../results/kagome_Heis_L12_t{t}_layers{layers}.hdf5') as f:
-        Vlists[t]  =  f["Vlist"][:]
-Vlist = Vlists[t]
 
+with h5py.File(
+    #f'../results/kagome_Heis_L12_t{t}_layers{layers}.hdf5'
+    f'../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L12_t{t}_layers{layers}_rS{rS if rS is not None else ""}_opt_SHORT.hdf5'
+    ) as f:
+    Vlist  =  f["Vlist"][:]
 Vlist_reduced = []
 for i, V in enumerate(Vlist):
     if i not in control_layers:
@@ -256,7 +288,6 @@ for chi_overlap in range(chi_overlap1, chi_overlap2, chi_overlap_incr):
     )
     with open(f"{L}_PEPS_log.txt", "a") as file:
         file.write("\n Fidelity for TICC: "+str(np.abs(overlap_approx)) + f", BD={BD}, chi_overlap={chi_overlap} \n")
-
 
 ov_tn = peps_E.make_overlap(
     peps_T,
