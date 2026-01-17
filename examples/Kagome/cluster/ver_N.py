@@ -19,9 +19,9 @@ import sys
 sys.path.append("../../../src/brickwall_sparse")
 from utils_sparse import construct_heisenberg_local_term
 
-
+reverse = True
 chi_overlap = 25
-Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (3, 4, 5, 32, 3)
+Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (3, 4, 5, 32, 30)
 #Lx, BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (4, 3, 2, 15, 2)
 cutoff = 1e-12
 layers = 22
@@ -265,11 +265,11 @@ overlap_approx = ov_tn.contract_compressed(
 peps_E = peps.copy()
 peps_T = peps.copy()
 peps_C = peps.copy()
-peps_E = trotter(peps_E.copy(), t, L,  J, perms_1+perms_2+perms_3,
+peps_E = trotter(peps_E.copy(), -t if reverse else t, L,  J, perms_1+perms_2+perms_3,
                      dt=t/trotter_step_ref, max_bond_dim=BD, trotter_order=trotter_order_ref)
-peps_aE = ccU(peps_C.copy(), Vlist_reduced, perms_ext_reduced, [], dagger=False,
-                 max_bond_dim=BD)
-peps_T = trotter(peps_T.copy(), t, L,  J, perms_1+perms_2+perms_3,
+peps_aE = ccU(peps_C.copy(), Vlist if reverse else Vlist_reduced, 
+    perms_extended if reverse else perms_ext_reduced, [], dagger=False, max_bond_dim=BD)
+peps_T = trotter(peps_T.copy(), -t if reverse else t, L,  J, perms_1+perms_2+perms_3,
                      dt=t/trotter_step, max_bond_dim=BD, trotter_order=trotter_order)
 peps_T.compress_all(max_bond=BD)
 peps_E.compress_all(max_bond=BD)
