@@ -21,9 +21,10 @@ from qiskit.quantum_info import state_fidelity
 
 custom_result_string = ""
 result_string = None
+bootstrap_r = 2
 niter = 50
-t = 0.05
-layers = 4
+t = 0.1
+layers = 12
 rS = 1
 
 Lx, Ly = (4, 4)
@@ -53,7 +54,19 @@ V = scipy.linalg.expm(-1j*t*hloc/(layers//4))
 Vlist_reduced = [V for i in range(layers)]
 
 
-if layers==4:
+if bootstrap_r==2:
+    control_layers = list(range(0, 19, 3))
+    perms_reduced = ps*3    
+    perms_ext = [p2] + [p1, p2] + [p4] + [p3, p4]  + [p2] + [p1, p2] + [p4] + [p3, p4]  + [p2] 
+
+    with h5py.File(f"../results/square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.05_layers7_.hdf5", 'r') as f:
+        Vlist_start_2  =  f["Vlist"][:]
+    Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
+    Vlist_start[6] = Vlist_start_2[0] @ Vlist_start_2[-1]
+    #Vlist_start[12] = Vlist_start_2[0] @ Vlist_start_2[-1]
+    
+
+elif layers==4:
     Vlist_start = [np.eye(4), V, V, np.eye(4), V, V, np.eye(4)]
     control_layers = list(range(0, 7, 3))
     perms_reduced = ps
@@ -64,6 +77,7 @@ elif layers==8:
     control_layers = list(range(0, 11, 5))
     perms_reduced = ps*2
     perms_ext = [p2] + ps + [p3] + ps  + [p2]
+
 
 elif layers==12:
     Vlist_start = [np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4)]
@@ -95,10 +109,10 @@ elif layers==36:
     Vlist_start[31] = Vlist_start_2[0] @ Vlist_start_2[-1]
 
 
-print("Trotter error of the starting point: ", 1-state_fidelity(ansatz_sparse(Vlist_start, L, perms_ext, state), expm_multiply(
-    1j * t * hamil, state)))
-print("Trotter error of the starting point: ", 1-state_fidelity(ansatz_sparse(Vlist_reduced, L, perms_reduced, state), expm_multiply(
-    -1j * t * hamil, state)))
+#print("Trotter error of the starting point: ", 1-state_fidelity(ansatz_sparse(Vlist_start, L, perms_ext, state), expm_multiply(
+#    1j * t * hamil, state)))
+#print("Trotter error of the starting point: ", 1-state_fidelity(ansatz_sparse(Vlist_reduced, L, perms_reduced, state), expm_multiply(
+#    -1j * t * hamil, state)))
 #print("Trotter error of the starting point: ", (np.linalg.norm(ansatz_sparse(Vlist_start, L, perms_extended, state) - expm_multiply(
 #    1j * t * hamil, state), ord=2) + np.linalg.norm(ansatz_sparse(Vlist_reduced, L, perms_ext_reduced, state) - expm_multiply(
 #    -1j * t * hamil, state), ord=2))/2)
