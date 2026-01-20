@@ -21,9 +21,9 @@ from qiskit.quantum_info import state_fidelity
 
 custom_result_string = ""
 result_string = None
-niter = 100
+niter = 50
 t = 0.05
-layers = 8
+layers = 4
 rS = 1
 
 Lx, Ly = (4, 4)
@@ -53,7 +53,13 @@ V = scipy.linalg.expm(-1j*t*hloc/(layers//4))
 Vlist_reduced = [V for i in range(layers)]
 
 
-if layers==8:
+if layers==4:
+    Vlist_start = [np.eye(4), V, V, np.eye(4), V, V, np.eye(4)]
+    control_layers = list(range(0, 7, 3))
+    perms_reduced = ps
+    perms_ext = [p2] + [p1, p2] + [p4] + [p3, p4]  + [p2]
+
+elif layers==8:
     Vlist_start = [np.eye(4), V, V, V, V, np.eye(4), V, V, V, V, np.eye(4)]
     control_layers = list(range(0, 11, 5))
     perms_reduced = ps*2
