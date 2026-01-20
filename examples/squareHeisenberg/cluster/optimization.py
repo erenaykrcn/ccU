@@ -21,9 +21,9 @@ from qiskit.quantum_info import state_fidelity
 
 custom_result_string = ""
 result_string = None
-niter = 20
-t = 0.1
-layers = 12
+niter = 100
+t = 0.05
+layers = 8
 rS = 1
 
 Lx, Ly = (4, 4)
@@ -53,7 +53,19 @@ V = scipy.linalg.expm(-1j*t*hloc/(layers//4))
 Vlist_reduced = [V for i in range(layers)]
 
 
-if layers==24:
+if layers==8:
+    Vlist_start = [np.eye(4), V, V, V, V, np.eye(4), V, V, V, V, np.eye(4)]
+    control_layers = list(range(0, 11, 5))
+    perms_reduced = ps*2
+    perms_ext = [p2] + ps + [p3] + ps  + [p2]
+
+elif layers==12:
+    Vlist_start = [np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4)]
+    control_layers = list(range(0, 17, 4))
+    perms_reduced = ps*3
+    perms_ext = [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  + [p3, p4, p1] + [p3] + [p2, p3, p4] + [p1]
+
+elif layers==24:
     #Vlist_start = [np.eye(4), V, V, V, V, V, V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V, V,
     #               np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4)]
     control_layers = list(range(0, 31, 5))
@@ -63,12 +75,6 @@ if layers==24:
         Vlist_start_2  =  f["Vlist"][:]
     Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
     Vlist_start[15] = Vlist_start_2[0] @ Vlist_start_2[-1]
-
-elif layers==12:
-    Vlist_start = [np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4)]
-    control_layers = list(range(0, 17, 4))
-    perms_reduced = ps*3
-    perms_ext = [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  + [p3, p4, p1] + [p3] + [p2, p3, p4] + [p1]
 
 elif layers==36:
     control_layers = list(range(0, 46, 5))
