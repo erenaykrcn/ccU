@@ -26,26 +26,26 @@ def random_hermitian(n, normalize=True):
     return H / norm
 
 
-N, t = 4, 1
-L = 3
+N, L = (4, 3)
 
 perms = [[0, 1, 2, 3] if i%2==0 else [1, 2, 3, 0] for i in range(L)]
 layers = len(perms)
-V = lambda : scipy.linalg.expm(-1j*t*random_hermitian(4))
-Vlist = [V() for i in range(layers)]
-G = ansatz(Vlist, N, perms)
+V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 
 
-for _ in range(200):
-    Vlist_reduced = [V() for i in range(layers)]
-    Vlist_trap, f_iter, err_iter = optimize(N, G, len(Vlist_reduced), 1,
-                                               Vlist_reduced, perms, niter=100,
+for t in [0.1, 0.5, 1]:
+  for _ in range(100):
+    G = ansatz([V(t) for i in range(layers)], 
+      N, perms) # Randomly Chosen Target from the Reachable Manifold of the Ansatz.
+    Vlist = [V(t) for i in range(layers)]
+    Vlist_trap, f_iter, err_iter = optimize(N, G, len(Vlist), 1,
+                                               Vlist, perms, niter=100,
                                                
                                                rho_trust=1e-1, radius_init=0.01, maxradius=0.1,
                                                tcg_abstol=1e-12, tcg_reltol=1e-10, tcg_maxiter=100
                                               )
     
-    with open(f"./logs/log_L{L}_N{N}_t{1}.txt", "a") as file:
+    with open(f"./logs/log_L{L}_N{N}_t{t}.txt", "a") as file:
       file.write(f"{err_iter[-1]} \n")
 
 
