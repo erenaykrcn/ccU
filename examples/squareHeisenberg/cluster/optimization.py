@@ -21,8 +21,8 @@ from qiskit.quantum_info import state_fidelity
 
 custom_result_string = ""
 bootstrap = True
-niter = 50
-t = 0.1
+niter = 20
+t = 0.2
 layers = 24
 rS = 1
 
@@ -31,7 +31,7 @@ L = Lx*Ly
 J = (1, 1, 1)
 h = (3, -1, 1)
 
-#result_string = f"square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers17_.hdf5"
+#result_string = f"square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers17_None.hdf5"
 result_string = None
 
 latt = qib.lattice.IntegerLattice((Lx, Ly), pbc=True)
@@ -59,17 +59,17 @@ Vlist_reduced = [V for i in range(layers)]
 
 if bootstrap:
     if layers==24:
-        control_layers = list(range(0, 33, 4))
+        control_layers = list(range(0, 17, 4)) + [17+i for i in range(0, 17, 4)]
+        print(control_layers)
         perms_reduced = ps*6
-        perms_ext = [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  +\
-         [p3, p4, p1] + [p3] + [p2, p3, p4] + [p1] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  +\
-         [p3, p4, p1] + [p3] + [p2, p3, p4] + [p2]
+        perms_ext = [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  + [p3, p4, p1] + [p3] + [p2, p3, p4] + [p1] +\
+            [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  + [p3, p4, p1] + [p3] + [p2, p3, p4] + [p1]
 
-        with h5py.File(f"../results/square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers17_.hdf5", 'r') as f:
+        with h5py.File(f"../results/square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers17_None.hdf5", 'r') as f:
             Vlist_start_2  =  f["Vlist"][:]
-        Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
-        Vlist_start[16] = Vlist_start_2[0] @ Vlist_start_2[-1]
-    
+        #Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
+        #Vlist_start[16] = Vlist_start_2[0] @ Vlist_start_2[-1]
+        Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)
 
 elif layers==4:
     Vlist_start = [np.eye(4), V, V, np.eye(4), V, V, np.eye(4)]
