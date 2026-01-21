@@ -33,7 +33,7 @@ def _layer_grad_proc(i):
             w = applyG_block_state(Vlist[j].conj().T, w, L, perm)
 
     with open(f"./_Plog.txt", "a") as file:
-        file.write(f"Loop {i}\n")
+        file.write(f"Loop {i}\n ")
     return ansatz_sparse_grad(V, L, v, w, perms)
 
 
@@ -77,6 +77,9 @@ def ansatz_sparse_grad_vector(Vlist, L, Uv, state, perms_extended, flatten=True,
     #  |   | -           - |    |
     nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
     ctx = get_context("fork")  # best on Linux HPC; if not available, remove
+
+    with open(f"./_Plog.txt", "a") as file:
+        file.write(f"Workers: {nproc}\n ")
 
     with ProcessPoolExecutor(
         max_workers=nproc,
