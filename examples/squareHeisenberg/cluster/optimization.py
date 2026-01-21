@@ -19,11 +19,11 @@ from scipy.linalg import expm
 from qiskit.quantum_info import state_fidelity
 
 
-custom_result_string = "p2"
-bootstrap = False
+custom_result_string = "threadedHessian"
+bootstrap = True
 niter = 20
-t = 0.1
-layers = 12
+t = 0.4
+layers = 48
 rS = 1
 hessian = True
 
@@ -32,8 +32,8 @@ L = Lx*Ly
 J = (1, 1, 1)
 h = (3, -1, 1)
 
-result_string = f"square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers17_None.hdf5"
-#result_string = None
+#result_string = f"square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers17_None.hdf5"
+result_string = None
 
 latt = qib.lattice.IntegerLattice((Lx, Ly), pbc=True)
 field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
@@ -67,6 +67,20 @@ if bootstrap:
             [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  + [p3, p4, p1] + [p3] + [p2, p3, p4] + [p1]
 
         with h5py.File(f"../results/square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers17_None.hdf5", 'r') as f:
+            Vlist_start_2  =  f["Vlist"][:]
+        #Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
+        #Vlist_start[16] = Vlist_start_2[0] @ Vlist_start_2[-1]
+        Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)
+    elif layers==48:
+        control_layers  =  list(range(0, 17, 4)) + [17+i for i in range(0, 17, 4)] + [17*2+i for i in range(0, 17, 4)] + [17*3+i for i in range(0, 17, 4)]
+        print(control_layers)
+        perms_reduced = ps*12
+        perms_ext = [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  + [p3, p4, p1] + [p3] + [p2, p3, p4] + [p1] +\
+            [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  + [p3, p4, p1] + [p3] + [p2, p3, p4] + [p1] +\
+            [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  + [p3, p4, p1] + [p3] + [p2, p3, p4] + [p1] +\
+            [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  + [p3, p4, p1] + [p3] + [p2, p3, p4] + [p1]
+
+        with h5py.File(f"../results/square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.2_layers34_threadedHessian.hdf5", 'r') as f:
             Vlist_start_2  =  f["Vlist"][:]
         #Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
         #Vlist_start[16] = Vlist_start_2[0] @ Vlist_start_2[-1]
