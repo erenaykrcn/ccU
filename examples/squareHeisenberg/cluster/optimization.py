@@ -25,7 +25,7 @@ niter = 20
 t = 0.2
 layers = 24
 rS = 1
-hessian = False
+hessian = True
 
 Lx, Ly = (4, 4)
 L = Lx*Ly

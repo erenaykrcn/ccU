@@ -6,32 +6,68 @@ from utils_sparse import (
 	project_unitary_tangent, real_to_antisymm,
 	applyG_block_state, applyG_state, partial_inner_product
 	)
+import os
+from multiprocessing import get_context
+from concurrent.futures import ThreadPoolExecutor
+
+
+def _hessian_block(k, j, Vlist, L, Uv, state, perms, unprojected):
+    eta = len(Vlist)
+
+    if unprojected:
+        Z = np.zeros((4, 4), dtype=complex)
+        Z.flat[j] = 1.0
+    else:
+        Z = np.zeros(16)
+        Z[j] = 1
+        Z = real_to_antisymm(Z.reshape(4, 4))
+
+    dVZj = ansatz_sparse_hess(
+        Vlist, L, Vlist[k] @ Z, k, Uv, state, perms,
+        unprojected=unprojected
+    )
+    block = np.zeros((eta, 16), dtype=float if not unprojected else complex)
+    for i in range(eta):
+        if unprojected:
+            block[i, :] = dVZj[i].reshape(-1)
+        else:
+            block[i, :] = antisymm_to_real(
+                antisymm(Vlist[i].conj().T @ dVZj[i])
+            ).reshape(-1)
+
+    return k, j, block
+
 
 
 def ansatz_sparse_hessian_matrix(Vlist, L, Uv, state, perms, flatten=True, unprojected=False):
-	"""
-	Construct the Hessian matrix.
-	"""
-	eta = len(Vlist)
-	Hess = np.zeros((eta, 16, eta, 16))
+    """
+    Construct the Hessian matrix.
+    """
+    eta = len(Vlist)
+    Hess = np.zeros((eta, 16, eta, 16))
 
-	for k in range(eta):
-		for j in range(16):
-			if unprojected:
-				Z = np.zeros((4, 4), dtype=complex)
-				Z.flat[j] = 1.0
-			else:
-				Z = np.zeros(16)
-				Z[j] = 1
-				Z = real_to_antisymm(np.reshape(Z, (4, 4)))
-			dVZj = ansatz_sparse_hess(Vlist, L, Vlist[k] @ Z, k, Uv, state, perms, unprojected=unprojected)
-			for i in range(eta):
-				Hess[i, :, k, j] = dVZj[i].reshape(-1) if unprojected else \
-						antisymm_to_real(antisymm( Vlist[i].conj().T @ dVZj[i] )).reshape(-1)
-	if flatten:
-		return Hess.reshape((eta*16, eta*16))
-	else:
-		return Hess
+    eta = len(Vlist)
+    Hess = np.zeros((eta, 16, eta, 16))
+    nthreads = int(os.environ.get("SLURM_CPUS_PER_TASK", 1))
+
+    with open(f"./_Hessian_P_log.txt", "a") as file:
+        file.write(f"Workers: {nthreads}\n ")
+
+    tasks = [(k, j) for k in range(eta) for j in range(16)]
+    with ThreadPoolExecutor(max_workers=nthreads) as ex:
+        futures = [
+            ex.submit(
+                _hessian_block, k, j, Vlist, L, Uv, state, perms, unprojected
+            )
+            for (k, j) in tasks
+        ]
+
+        for fut in futures:
+            k, j, block = fut.result()
+            Hess[:, :, k, j] = block
+
+    return Hess.reshape((eta * 16, eta * 16)) if flatten else Hess
+
 
 
 def ansatz_hess_single_layer(V, L, Z, v, w, perm):
