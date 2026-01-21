@@ -7,6 +7,35 @@ from utils_sparse import (
     partial_inner_product, applyG_state, applyG_block_state
 	)
 
+import os
+from multiprocessing import get_context
+from concurrent.futures import ProcessPoolExecutor
+
+# module globals
+_G = {}
+def _init_worker(Vlist, L, Uv, state, perms_extended):
+    _G["Vlist"] = Vlist
+    _G["L"] = L
+    _G["Uv"] = Uv
+    _G["state"] = state
+    _G["perms_extended"] = perms_extended
+
+def _layer_grad_proc(i):
+    Vlist = _G["Vlist"]; L = _G["L"]; Uv = _G["Uv"]; state = _G["state"]; perms_extended = _G["perms_extended"]
+    V = Vlist[i]
+    perms = perms_extended[i]
+    v, w = (state.copy(), Uv.copy())
+    for j in range(i):
+        for perm in perms_extended[j]:
+            v = applyG_block_state(Vlist[j], v, L, perm)
+    for j in list(range(i+1, len(Vlist)))[::-1]:
+        for perm in list(perms_extended[j])[::-1]:
+            w = applyG_block_state(Vlist[j].conj().T, w, L, perm)
+
+    with open(f"./_Plog.txt", "a") as file:
+        file.write(f"Loop {i}\n")
+    return ansatz_sparse_grad(V, L, v, w, perms)
+
 
 def ansatz_sparse(Vlist, L, perms, state):
     for j, V in enumerate(Vlist):
@@ -46,8 +75,18 @@ def ansatz_sparse_grad_vector(Vlist, L, Uv, state, perms_extended, flatten=True,
     #  |   | -           - |    |
     #  | v | - Brickwall - | Uv |
     #  |   | -           - |    |
+    nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
+    ctx = get_context("fork")  # best on Linux HPC; if not available, remove
 
-    dVlist = [None for i in range(len(Vlist))]
+    with ProcessPoolExecutor(
+        max_workers=nproc,
+        mp_context=ctx,
+        initializer=_init_worker,
+        initargs=(Vlist, L, Uv, state, perms_extended),
+    ) as ex:
+        dVlist = list(ex.map(_layer_grad_proc, range(len(Vlist))))
+
+    """dVlist = [None for i in range(len(Vlist))]
     for i, V in enumerate(Vlist):
         perms = perms_extended[i]
         v, w = (state.copy(), Uv.copy())
@@ -58,7 +97,7 @@ def ansatz_sparse_grad_vector(Vlist, L, Uv, state, perms_extended, flatten=True,
             for perm in list(perms_extended[j])[::-1]:
                 w = applyG_block_state(Vlist[j].conj().T, w, L, perm)
         grad = ansatz_sparse_grad(V, L, v, w, perms)
-        dVlist[i] = grad
+        dVlist[i] = grad"""
 
     if unprojected:
         return dVlist
