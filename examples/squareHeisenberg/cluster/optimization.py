@@ -20,17 +20,20 @@ from qiskit.quantum_info import state_fidelity
 
 
 custom_result_string = ""
-result_string = None
-bootstrap_r = 2
+bootstrap = True
 niter = 50
 t = 0.1
-layers = 12
+layers = 24
 rS = 1
 
 Lx, Ly = (4, 4)
 L = Lx*Ly
 J = (1, 1, 1)
 h = (3, -1, 1)
+
+#result_string = f"square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers17_.hdf5"
+result_string = None
+
 latt = qib.lattice.IntegerLattice((Lx, Ly), pbc=True)
 field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
 hamil = qib.HeisenbergHamiltonian(field, J, h).as_matrix()
@@ -54,16 +57,18 @@ V = scipy.linalg.expm(-1j*t*hloc/(layers//4))
 Vlist_reduced = [V for i in range(layers)]
 
 
-if bootstrap_r==2:
-    control_layers = list(range(0, 19, 3))
-    perms_reduced = ps*3    
-    perms_ext = [p2] + [p1, p2] + [p4] + [p3, p4]  + [p2] + [p1, p2] + [p4] + [p3, p4]  + [p2] 
+if bootstrap:
+    if layers==24:
+        control_layers = list(range(0, 33, 4))
+        perms_reduced = ps*6
+        perms_ext = [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  +\
+         [p3, p4, p1] + [p3] + [p2, p3, p4] + [p1] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  +\
+         [p3, p4, p1] + [p3] + [p2, p3, p4] + [p2]
 
-    with h5py.File(f"../results/square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.05_layers7_.hdf5", 'r') as f:
-        Vlist_start_2  =  f["Vlist"][:]
-    Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
-    Vlist_start[6] = Vlist_start_2[0] @ Vlist_start_2[-1]
-    #Vlist_start[12] = Vlist_start_2[0] @ Vlist_start_2[-1]
+        with h5py.File(f"../results/square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers17_.hdf5", 'r') as f:
+            Vlist_start_2  =  f["Vlist"][:]
+        Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
+        Vlist_start[16] = Vlist_start_2[0] @ Vlist_start_2[-1]
     
 
 elif layers==4:
