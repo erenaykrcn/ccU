@@ -25,6 +25,7 @@ niter = 20
 t = 0.2
 layers = 24
 rS = 1
+hessian = False
 
 Lx, Ly = (4, 4)
 L = Lx*Ly
@@ -130,7 +131,8 @@ else:
     Vlist_start_2 = Vlist_start
 
 Vlist, f_iter, err_iter = optimize(L, hamil, t, Vlist_start_2, perms_ext, perms_reduced=perms_reduced,
-                                   control_layers=control_layers, rS=rS, niter=niter, log_txt=custom_result_string)
+                                   control_layers=control_layers, rS=rS, niter=niter, log_txt=custom_result_string,
+                                   hessian=hessian)
 
 with h5py.File(f"../results/square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t{t}_layers{len(Vlist)}_{custom_result_string}.hdf5", "w") as f:
     f.create_dataset("Vlist", data=Vlist)

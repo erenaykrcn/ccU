@@ -14,7 +14,7 @@ def err(vlist, Uv, v, L, perms):
     return -np.vdot(Uv, ansatz_sparse(vlist, L, perms, v)).real
 
 def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers=[], rS=1, log=False, 
-    log_txt='', **kwargs):
+    log_txt='', hessian=True, **kwargs):
     n = len(Vlist_start)
     indices = []
     for i in range(len(Vlist_start)):
@@ -66,6 +66,9 @@ def optimize(L, hamil, t, Vlist_start, perms, perms_reduced=None, control_layers
         return gradfunc1.reshape(-1)
 
     def hessfunc(vlist):
+        if not hessian:
+            return np.zeros((n * 16, n * 16))
+
         if len(control_layers)==0:
             h = -ansatz_sparse_hessian_matrix(vlist, L, expm_multiply(-1j * t * hamil, random_svs[0]), random_svs[0], perms)
             for v in random_svs[1:]:
