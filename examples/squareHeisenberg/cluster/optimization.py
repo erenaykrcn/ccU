@@ -19,11 +19,11 @@ from scipy.linalg import expm
 from qiskit.quantum_info import state_fidelity
 
 
-custom_result_string = "threadedHessian"
-bootstrap = True
-niter = 20
-t = 0.4
-layers = 48
+custom_result_string = "_gamma4_"
+bootstrap = False
+niter = 50
+t = 0.05
+layers = 8
 rS = 1
 hessian = True
 
@@ -33,7 +33,7 @@ J = (1, 1, 1)
 h = (3, -1, 1)
 
 #result_string = f"square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers17_None.hdf5"
-result_string = None
+result_string = "square_Heis1113-11_L16_L16_t0.05_layers11__gamma4_.hdf5"
 
 latt = qib.lattice.IntegerLattice((Lx, Ly), pbc=True)
 field = qib.field.Field(qib.field.ParticleType.QUBIT, latt)
@@ -98,12 +98,44 @@ elif layers==8:
     perms_reduced = ps*2
     perms_ext = [p2] + ps + [p3] + ps  + [p2]
 
+elif layers==16:
+    t = 0.1
+    control_layers = list(range(0, 21, 5))
+    perms_reduced = ps*4
+    perms_ext = [p2] + ps + [p3] + ps  + [p2] + ps + [p3] + ps  + [p2]
+    with h5py.File(f"../results/square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.05_layers11_{custom_result_string}.hdf5", 'r') as f:
+            Vlist_start_2  =  f["Vlist"][:]
+    Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
+    Vlist_start[10] = Vlist_start_2[0] @ Vlist_start_2[-1]
+
+elif layers==32:
+    t = 0.2
+    control_layers = list(range(0, 41, 5))
+    perms_reduced = ps*8
+    perms_ext = [p2] + ps + [p3] + ps  + [p2] + ps + [p3] + ps  + [p2] + ps + [p3] + ps  + [p2] + ps + [p3] + ps + [p2]
+    with h5py.File(f"../results/square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers21_{custom_result_string}.hdf5", 'r') as f:
+            Vlist_start_2  =  f["Vlist"][:]
+    Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
+    Vlist_start[20] = Vlist_start_2[0] @ Vlist_start_2[-1]
+
+elif layers==64:
+    t = 0.4
+    control_layers = list(range(0, 81, 5))
+    perms_reduced = ps*16
+    perms_ext = [p2] + ps + [p3] + ps  + [p2] + ps + [p3] + ps  + [p2] + ps + [p3] + ps  + [p2] + ps + [p3] + ps + [p2] + ps + [p3] + ps  + [p2] + ps + [p3] + ps  + [p2] + ps + [p3] + ps  + [p2] + ps + [p3] + ps + [p2]
+    with h5py.File(f"../results/square_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.2_layers41_{custom_result_string}.hdf5", 'r') as f:
+            Vlist_start_2  =  f["Vlist"][:]
+    Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
+    Vlist_start[40] = Vlist_start_2[0] @ Vlist_start_2[-1]
+
+
 
 elif layers==12:
     Vlist_start = [np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4), V, V, V, np.eye(4)]
     control_layers = list(range(0, 17, 4))
     perms_reduced = ps*3
     perms_ext = [p2] + [p1, p2, p3] + [p1] + [p4, p1, p2]  + [p4]  + [p3, p4, p1] + [p3] + [p2, p3, p4] + [p2]
+
 
 elif layers==24:
     #Vlist_start = [np.eye(4), V, V, V, V, V, V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V, V,
