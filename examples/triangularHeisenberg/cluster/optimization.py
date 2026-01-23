@@ -43,9 +43,7 @@ XY = np.kron(X, Y)
 ZY = np.kron(Z, Y)
 
 state = np.array(random_statevector(2**L).data)
-hloc1 = construct_heisenberg_local_term((J[0], 0   ,    0), (0, h[1],       0), ndim=3)
-hloc2 = construct_heisenberg_local_term((0   ,    J[1], 0), (0, 0, h[2]   ), ndim=3)
-hloc3 = construct_heisenberg_local_term((0   , 0   , J[2]), (h[0], 0,       0), ndim=3)
+hloc = construct_heisenberg_local_term((J[0], J[1], J[2]), (h[0], h[1], h[2]), ndim=3)
 
 
 def exec(t, layers, rS=1, result_string=None, custom_result_string='', bootstrap=False, niter=50, hessian = True):
