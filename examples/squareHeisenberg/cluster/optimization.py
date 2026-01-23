@@ -176,21 +176,21 @@ rS = 1
 hessian = True
 
 
-exec(0.05, 8, rS=rS, result_string="square_Heis1113-11_L16_L16_t0.05_layers11__gamma4_.hdf5", 
+#exec(0.05, 8, rS=rS, result_string="square_Heis1113-11_L16_L16_t0.05_layers11__gamma4_.hdf5", 
+#    custom_result_string=custom_result_string, bootstrap=bootstrap, 
+#    niter=niter, hessian=hessian)
+
+exec(0.1, 16, rS=rS, result_string="square_Heis1113-11_L16_L16_t0.1_layers21__gamma4_.hdf5", 
     custom_result_string=custom_result_string, bootstrap=bootstrap, 
     niter=niter, hessian=hessian)
 
-exec(0.1, 16, rS=rS, result_string=None, 
-    custom_result_string=custom_result_string, bootstrap=bootstrap, 
-    niter=niter, hessian=hessian)
+#exec(0.2, 32, rS=rS, result_string=None, 
+#    custom_result_string=custom_result_string, bootstrap=bootstrap, 
+#    niter=niter, hessian=hessian)
 
-exec(0.2, 32, rS=rS, result_string=None, 
-    custom_result_string=custom_result_string, bootstrap=bootstrap, 
-    niter=niter, hessian=hessian)
-
-exec(0.4, 64, rS=rS, result_string=None, 
-    custom_result_string=custom_result_string, bootstrap=bootstrap, 
-    niter=niter, hessian=hessian)
+#exec(0.4, 64, rS=rS, result_string=None, 
+#    custom_result_string=custom_result_string, bootstrap=bootstrap, 
+#    niter=niter, hessian=hessian)
 
 
 
