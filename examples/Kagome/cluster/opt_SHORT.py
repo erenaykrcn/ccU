@@ -17,12 +17,12 @@ from scipy.linalg import expm
 from functools import reduce
 
 
-niter = 30
-t = 0.6
+niter = 20
+t = 0.4
 rS = 1
 result_string = None
 custom_result_string = ""
-layers = 54
+layers = 72
 # ext layers: 22
 
 def bonds_from_perms(perms):
@@ -112,10 +112,20 @@ hamil = build_H(L, all_bonds, J, h, 4)
 hloc = construct_heisenberg_local_term((J[0], J[1], J[2]), (h[0], h[1], h[2]), ndim=2)
 V = scipy.linalg.expm(-1j*t*hloc/(layers//6))
 Vlist_reduced = [V for i in range(layers)]
+    
+
+if layers==72:
+    control = list(range(0, 85, 7))
+    perms_reduced = [p1, p2, p3, p4, p5, p6]*12
+    perms_ext = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]  + ps + [p3] +  ps + [p5] + ps + [p2] +\
+        ps  + [p3] + ps  + [p5]  + ps + [p2]  + ps + [p3] +  ps + [p5] + ps + [p2]
+    with h5py.File(f"../results/kagome_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_t{t/2}_layers43_rS{rS}_opt_SHORT{custom_result_string}.hdf5", 'r') as f:
+        Vlist_start_2  =  f["Vlist"][:]
+    Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
+    Vlist_start[42] = Vlist_start_2[0] @ Vlist_start_2[-1]
+
 
 if layers==36:
-    #Vlist_start = [np.eye(4), V, V, V, V, V, V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V, V,
-    #               np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4), V, V, V, V, V,V, np.eye(4)]
     control = list(range(0, 43, 7))
     perms_reduced = [p1, p2, p3, p4, p5, p6]*6
     perms_ext = [p2] + ps  + [p3] + ps  + [p5]  + ps + [p2]  + ps + [p3] +  ps + [p5] + ps + [p2]
