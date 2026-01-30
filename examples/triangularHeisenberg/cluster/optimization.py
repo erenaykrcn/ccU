@@ -90,7 +90,7 @@ rS = 1
 hessian = True
 
 
-exec(0.05, 22, rS=rS, result_string=None, 
+exec(0.05, 22, rS=rS, result_string="triang_Heis1113-11_L16_L16_t0.05_layers22__gamma4_.hdf5", 
     custom_result_string=custom_result_string, bootstrap=bootstrap, 
     niter=50, hessian=hessian)
 
