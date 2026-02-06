@@ -66,6 +66,15 @@ def exec(t, layers, rS=1, result_string=None, custom_result_string='', bootstrap
         Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
         Vlist_start[21] = Vlist_start_2[0] @ Vlist_start_2[-1]
 
+    elif layers==85:
+        control_layers = list(range(0, 85, 7))
+        perms_reduced = ps*12
+        perms_ext = [p2] + ps + [p3] + ps  + [p5] + ps  + [p2] + ps + [p3] + ps  + [p5] + ps  + [p2]  + ps + [p3] + ps  + [p5] + ps  + [p2] + ps + [p3] + ps  + [p5] + ps  + [p2]
+        with h5py.File(f"../results/triang_Heis{J[0]}{J[1]}{J[2]}{h[0]}{h[1]}{h[2]}_L{L}_L{L}_t0.1_layers43_{custom_result_string}.hdf5", 'r') as f:
+                Vlist_start_2  =  f["Vlist"][:]
+        Vlist_start = list(Vlist_start_2) + list(Vlist_start_2)[1:]
+        Vlist_start[42] = Vlist_start_2[0] @ Vlist_start_2[-1]
+
     if result_string is not None:
         with h5py.File(f'../results/{result_string}') as f:
             Vlist_start_2  =  f["Vlist"][:]
@@ -90,11 +99,15 @@ rS = 1
 hessian = True
 
 
-exec(0.05, 22, rS=rS, result_string="triang_Heis1113-11_L16_L16_t0.05_layers22__gamma4_.hdf5", 
-    custom_result_string=custom_result_string, bootstrap=bootstrap, 
-    niter=50, hessian=hessian)
+#exec(0.05, 22, rS=rS, result_string="triang_Heis1113-11_L16_L16_t0.05_layers22__gamma4_.hdf5", 
+#    custom_result_string=custom_result_string, bootstrap=bootstrap, 
+#    niter=50, hessian=hessian)
 
-exec(0.1, 43, rS=rS, result_string=None, 
+#exec(0.1, 43, rS=rS, result_string=None, 
+#    custom_result_string=custom_result_string, bootstrap=bootstrap, 
+#    niter=20, hessian=hessian)
+
+exec(0.2, 85, rS=rS, result_string=None, 
     custom_result_string=custom_result_string, bootstrap=bootstrap, 
     niter=20, hessian=hessian)
 
