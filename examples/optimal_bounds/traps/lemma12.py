@@ -37,15 +37,15 @@ R_ests = np.logspace(-2, 1, 50)
 Rt = {t: None for t in ts}
 
 for t in ts:
-  target_list = [V(t) for i in range(L)]
-  G = ansatz(target_list, N, perms) # Randomly Chosen Target from the Reachable Manifold of the Ansatz.
   print("t: ", t)
 
   for R_est in R_ests:
     print(f"\n R_est: {R_est} \n")
-
     Rts = []
     for _ in range(num_random_searches):
+      target_list = [V(t) for i in range(L)]
+      G = ansatz(target_list, N, perms) # Randomly Chosen Target from the Reachable Manifold of the Ansatz.
+
       G0 = V(R_est, 2**N) @ G
       
       Vlist_0, f_iter, err_iter = optimize(N, G0, L, 1, target_list, perms, niter=100, log=False,
