@@ -10,7 +10,7 @@ import warnings
 from precision import HP as prec
 
 
-def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, **kwargs):
+def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, log=True, **kwargs):
     # Here, eta refers to the number of layers in between each controlling layer.
     # Gamma refers to the number of controlling layers. If controlling layers are
     # inserted, we expect the time evolution direction to be reverted.
@@ -93,7 +93,7 @@ def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, **kwar
 
     # quantify error by spectral norm
     def errfunc(vlist): 
-        """if gamma>1:
+        if gamma>1:
             err =  np.linalg.norm(
             ansatz(reduce_list(
                 vlist, gamma, eta), L, reduce_list(perms, gamma, eta)) - U, ord=2) + np.linalg.norm(
@@ -102,12 +102,15 @@ def optimize(L: int, U, eta, gamma, Vlist_start, perms, penalty_weight=0, **kwar
         else:
             M = np.asarray(ansatz(vlist, L, perms), dtype=np.complex128)
             err = np.linalg.norm(M - U, ord=2)
-        return err"""
-        err = f(vlist)
-        print("err: ", 1+err/2**(L+1))
-        with open(f"./_BRICKWALL_log_layers{n}_t{t}.txt", "a") as file:
-            file.write(f"Error {1+err/2**(L+1)}\n")
-        return 1+err/2**(L+1)
+
+        if log:
+            print("err: ", err)
+        return err
+        #err = f(vlist)
+        #print("err: ", 1+err/2**(L+1))
+        #with open(f"./_BRICKWALL_log_layers{n}_t{t}.txt", "a") as file:
+        #    file.write(f"Error {1+err/2**(L+1)}\n")
+        #return 1+err/2**(L+1)
 
 
     kwargs["gfunc"] = errfunc
