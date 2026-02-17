@@ -26,26 +26,33 @@ def random_hermitian(n, normalize=True):
     return H / norm
 
 
-N, L = (4, 3)
+N, L = (4, 4)
 
 perms = [[0, 1, 2, 3] if i%2==0 else [1, 2, 3, 0] for i in range(L)]
 layers = len(perms)
 V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 
 
-for t in [0.1, 0.5, 1]:
-  for _ in range(100):
-    G = ansatz([V(t) for i in range(layers)], 
-      N, perms) # Randomly Chosen Target from the Reachable Manifold of the Ansatz.
+for t in [1e-4, 1e-3, 1e-2, 0.1, 0.25, 0.5, 0.75, 0.8, 0.9, 1, 2.5, 5]:
+  for _ in range(1000):
+    G = ansatz([V(t) for i in range(layers)], N, perms) # Randomly Chosen Target from the Reachable Manifold of the Ansatz.
+    eps_ = t * np.exp(-L/t)
+    print('eps_', eps_)
+    U = scipy.linalg.expm(1j*eps_*random_hermitian(2**N))@G
+    print("|U-G|: ", np.linalg.norm(U - G, ord=2))
+
+    with open(f"./logs/U_log_L{L}_N{N}_t{t}.txt", "a") as file:
+      file.write("|U-G|: " + str(np.linalg.norm(U - G, ord=2)) + ' ')
+
     Vlist = [V(t) for i in range(layers)]
-    Vlist_trap, f_iter, err_iter = optimize(N, G, len(Vlist), 1,
-                                               Vlist, perms, niter=100,
+    Vlist_trap, f_iter, err_iter = optimize(N, U, len(Vlist), 1,
+                                               Vlist, perms, niter=5000,
                                                
                                                rho_trust=1e-1, radius_init=0.01, maxradius=0.1,
                                                tcg_abstol=1e-12, tcg_reltol=1e-10, tcg_maxiter=100
                                               )
     
-    with open(f"./logs/log_L{L}_N{N}_t{t}.txt", "a") as file:
+    with open(f"./logs/U_log_L{L}_N{N}_t{t}.txt", "a") as file:
       file.write(f"{err_iter[-1]} \n")
 
 
