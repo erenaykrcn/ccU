@@ -134,7 +134,7 @@ def _run(t):
     U = scipy.linalg.expm(-1j*t*hamil.todense())
     for _ in range(2000):
         Vlist_reduced = [V(t) for i in range(L)]
-        r = optimize(N, U, 
+        Vlist_trap, f_iter, err_iter = optimize(N, U, 
                 len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
 
         with open(f"./logs/ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
