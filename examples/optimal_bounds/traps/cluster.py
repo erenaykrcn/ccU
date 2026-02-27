@@ -1,6 +1,7 @@
 """
     Convergence Guarantee.
 """
+import os
 import numpy as np
 import qiskit
 from qiskit.quantum_info import state_fidelity
@@ -25,6 +26,9 @@ import scipy.sparse as sp
 from scipy.linalg import expm
 from functools import reduce
 
+
+from multiprocessing import get_context
+from concurrent.futures import ProcessPoolExecutor
 
 
 def random_hermitian(n, normalize=True):
@@ -116,15 +120,37 @@ V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 N, L = 4, 3
 perms = [[0, 1, 2, 3], [1, 2, 3, 0], [0, 1, 2, 3]]
 all_bonds = bonds_from_perms(perms)
+ts = np.logspace(-2, 2, 50)
 
 
-for t in np.logspace(-2, 2, 50):
+# module globals
+_G = {}
+def _init_worker(N, perms, L):
+    _G["N"] = N
+    _G["perms"] = perms
+    _G["L"] = L
+def _run(t):
     hamil = build_H(N, all_bonds, norm=1)
+    U = scipy.linalg.expm(-1j*t*hamil.todense())
     for _ in range(2000):
         Vlist_reduced = [V(t) for i in range(L)]
-        V_opt, f_iter, err_iter = optimize(N, scipy.linalg.expm(-1j*t*hamil.todense()), 
+        r = optimize(N, U, 
                 len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
 
         with open(f"./logs/ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
           file.write(f"{err_iter[-1]} \n")
+
+
+nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
+ctx = get_context("fork")  # best on Linux HPC; if not available, remove
+with open(f"./_C_Plog.txt", "a") as file:
+    file.write(f"Workers: {nproc}\n ")
+with ProcessPoolExecutor(
+        max_workers=nproc,
+        mp_context=ctx,
+        initializer=_init_worker,
+        initargs=(N, perms, L),
+) as ex:
+    ex.map(_run, ts)
+
 
