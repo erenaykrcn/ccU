@@ -36,18 +36,14 @@ perms_1, perms_2 = (
 
 chi_overlap = 256
 cutoff = 1e-12
-#BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (5, 256, 256, 3)
-BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (2, 6, 8, 3)
-trotter_order, trotter_step = (1, 3)
-trotter_order_ref, trotter_step_ref = (2, 6)
+BD, chi_overlap1, chi_overlap2, chi_overlap_incr  = (2, 10, 11, 3)
+trotter_order, trotter_step = (1, 2)
+trotter_order_ref, trotter_step_ref = (2, 2)
 nsteps = 2
+t = 0.125
 
-niter = 8
-t = 0.1
-layers = 24
 
-J = (1, 1, 1)
-h = (3, -1, 1)
+J, g = (1, 3)
 Lx, Ly = (6, 6)
 L = Lx*Ly
 
@@ -66,98 +62,73 @@ from quimb.tensor.tensor_2d_tebd import TEBD2D, LocalHam2D
 import gc
 
 
-def trotter(peps, t, L, J,  perms, dag=False,
-                      max_bond_dim=5, dt=0.1, trotter_order=2, h=h):
-    # Number of steps
-    nsteps = abs(int(np.ceil(t / dt)))
-    dt = t / nsteps
 
-    hloc1 = J[0]*np.kron(X, X) + h[0]/4 * (np.kron(X, I2)+np.kron(I2, X))
-    hloc2 = J[1]*np.kron(Y, Y) + h[1]/4 * (np.kron(Y, I2)+np.kron(I2, Y))
-    hloc3 = J[2]*np.kron(Z, Z) + h[2]/4 * (np.kron(Z, I2)+np.kron(I2, Z))
-    hlocs = (hloc1, hloc2, hloc3)
-
-    # Suzuki splitting
+def trotter(peps, t, L, Lx, Ly, J, g, perms_v, perms_h, dag=False, max_bond_dim=5, 
+            dt=0.1, trotter_order=2):
+    nsteps = np.abs(int(np.ceil(t/dt)))
+    print("Trotter steps ", nsteps)
+    dt = t/nsteps
     if trotter_order > 1:
-        sm = oc.SplittingMethod.suzuki(len(hlocs), int(np.log(trotter_order)/np.log(2)))
-        indices, coeffs = sm.indices, sm.coeffs
+        indices = oc.SplittingMethod.suzuki(2, int(np.log(trotter_order)/np.log(2))).indices
+        coeffs = oc.SplittingMethod.suzuki(2, int(np.log(trotter_order)/np.log(2))).coeffs
     else:
-        indices, coeffs = range(len(hlocs)), [1]*len(hlocs)
-        
+        indices = [0, 1]
+        coeffs = [1, 1]
+    
+    hloc1 = g*(np.kron(X, I2)+np.kron(I2, X))/4
+    hloc2 = J*np.kron(Z, Z)
+    hlocs = (hloc1, hloc2)
     Vlist_start = []
     for i, c in zip(indices, coeffs):
         Vlist_start.append(-1j*c*dt*hlocs[i])
-    
 
     for n in range(nsteps):
         for layer, V in enumerate(Vlist_start):
             i = n*len(Vlist_start)+layer
-            for perm in perms:
-                ordering = {(map_[perm[2*j]], map_[perm[2*j+1]]): V for j in range(len(perm)//2)}
-                tebd = TEBD2D(peps, ham=LocalHam2D(Lx, Ly, ordering, cyclic=True),
-                    tau=1, D=max_bond_dim)
-                tebd.sweep(tau=-1)
-                peps = tebd.state
-
-                del tebd
-                gc.collect()
+            for perm in perms_h:
+                ordering = {(map_[perm[2*j]], map_[perm[2*j+1]]): V for j in range(L//2)}
+                start = time.time()
+                t = TEBD2D(peps, ham=LocalHam2D(Lx, Ly, ordering, cyclic=True),
+                    tau=-1, D=max_bond_dim, chi=1)
+                t.sweep(tau=-1)
+                peps = t.state
+                
+            for perm in perms_v:
+                ordering = {(map_[perm[2*j]], map_[perm[2*j+1]]): V for j in range(L//2)}
+                start = time.time()
+                t = TEBD2D(peps, ham=LocalHam2D(Lx, Ly, ordering, cyclic=True),
+                    tau=-1, D=max_bond_dim, chi=1)
+                t.sweep(tau=-1)
+                peps = t.state
     return peps
 
 
-def ccU(peps, Vlist, perms_extended, control_layers, dagger=False, max_bond_dim=10):
+def ccU(peps, Vlist, perms_extended, control_layers, dagger=False, max_bond_dim=10, lower_max_bond_dim=4, treshold=10):
     for i, V in enumerate(Vlist):
         if dagger or i not in control_layers:
             perms = perms_extended[i]
             for perm in perms:
-                ordering = {(map_[perm[2*j]], map_[perm[2*j+1]]): V for j in range(len(perm)//2)}
-                tebd = TEBD2D(peps, ham=LocalHam2D(Lx, Ly, ordering, cyclic=True),
-                    tau=1, D=max_bond_dim)
-
-                tebd.sweep(tau=-1)
-                peps = tebd.state
-
-                del tebd
-                gc.collect()
+                ordering = {(map_[perm[2*j]], map_[perm[2*j+1]]): scipy.linalg.logm(V) for j in range(L//2)}
+                start = time.time()
+                t = TEBD2D(peps, ham=LocalHam2D(Lx, Ly, ordering, cyclic=True),
+                    tau=-1, D=max_bond_dim, chi=1)
+                t.sweep(tau=-1)
+                peps = t.state
     return peps
 
 
-if layers == 24:
-    perms_extended = [[perms_1[0]]] + [[perms_1[0]]]+ [[perms_1[1]]] + [[perms_1[0]], [perms_2[0]]] +\
-          [[perms_2[0]]]+ [[perms_2[1]]]  + [[perms_2[0]]]
-    perms_extended = perms_extended*3
-    perms_ext_reduced =  [[perms_1[0]]]+ [[perms_1[1]]]  +  [[perms_2[0]]]+ [[perms_2[1]]]
-    perms_ext_reduced = perms_ext_reduced*3
-elif layers == 48:
-
-    perms_extended = [[perms_1[0]]] + [[perms_1[0]]]+ [[perms_1[1]]] + [[perms_1[0]], [perms_2[0]]] +\
-          [[perms_2[0]]]+ [[perms_2[1]]]  + [[perms_2[0]]] 
-    perms_extended = perms_extended*6
-    perms_ext_reduced =  [[perms_1[0]]]+ [[perms_1[1]]]  +  [[perms_2[0]]]+ [[perms_2[1]]]
-    perms_ext_reduced = perms_ext_reduced*6
-    print(len(perms_extended))
-non_control_layers = []
-k = 0
-while True:
-    a = 1 + 4*k
-    b = 2 + 4*k
-    if a > len(perms_extended) or b > len(perms_extended):
-        break
-    non_control_layers.extend([a, b])
-    k += 1
-control_layers = []
-
-for i in range(len(perms_extended)):
-    if i not in non_control_layers:
-        control_layers.append(i)
+perms_extended = [[perms_1[0]]] + [perms_1]*3 + [[perms_1[0]], [perms_2[0]]] +\
+                    [perms_2]*3 + [[perms_2[0]]]
+perms_ext_reduced = [perms_1]*3  + [perms_2]*3
+control_layers = [0, 4, 5, 9]           # 4 control layers
 
 
-with h5py.File(f'./results/square_Heis_L16_t{t}_layers{layers}_niter{niter}.hdf5') as f:
+with h5py.File(f'./results/tfim2d_ccU_SPARSE_103_Lx4Ly4_t0.125_layers10_niter10_rS1_2hloc.hdf5', 'r') as f:
     Vlist  =  f["Vlist"][:]
 Vlist_reduced = []
 for i in range(len(Vlist)):
     if i not in control_layers:
         Vlist_reduced.append(Vlist[i])
-
 
 
 map_ = {i: (i//Ly, i%Lx) for i in range(L)}
@@ -172,17 +143,17 @@ overlap_approx = ov_tn.contract_compressed(
     max_bond=chi_overlap,
     cutoff=cutoff,
 )
-norm = np.sqrt(abs(overlap_approx))
-peps = peps/np.abs(norm)
+norm = np.sqrt(np.abs(overlap_approx))
+peps = peps/norm
 
 peps_E = peps.copy()
 peps_T = peps.copy()
 peps_C = peps.copy()
-peps_E = trotter(peps_E.copy(), t, L,  J, perms_1+perms_2,
+peps_E = trotter(peps_E.copy(), t, L, Lx, Ly, J, g, perms_1, perms_2,
                      dt=t/trotter_step_ref, max_bond_dim=BD, trotter_order=trotter_order_ref)
 peps_aE = ccU(peps_C.copy(), Vlist_reduced, perms_ext_reduced, [], dagger=False,
                  max_bond_dim=BD)
-peps_T = trotter(peps_T.copy(), t, L,  J, perms_1+perms_2,
+peps_T = trotter(peps_T.copy(), t, L, Lx, Ly, J, g, perms_1, perms_2,
                      dt=t/trotter_step, max_bond_dim=BD, trotter_order=trotter_order)
 peps_T.compress_all(max_bond=BD)
 peps_E.compress_all(max_bond=BD)
