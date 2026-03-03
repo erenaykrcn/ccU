@@ -118,7 +118,7 @@ V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 
 
 N, L = 4, 3
-perms = [[0, 1, 2, 3], [1, 2, 3, 0], [0, 1, 2, 3]]
+perms = [[0, 1, 2, 3], [1, 2, 3, 0], [0, 2, 1, 3]]
 all_bonds = bonds_from_perms(perms)
 ts = np.logspace(-2, 2, 50)
 
@@ -133,11 +133,11 @@ def _run(t):
     hamil = build_H(N, all_bonds, norm=1)
     U = scipy.linalg.expm(-1j*t*hamil.todense())
     for _ in range(2000):
-        Vlist_reduced = [V(t) for i in range(L)]
+        Vlist_reduced = [V(t*2/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
         Vlist_trap, f_iter, err_iter = optimize(N, U, 
                 len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
 
-        with open(f"./logs/ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
+        with open(f"./logs/V2_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
           file.write(f"{err_iter[-1]} \n")
 
 
