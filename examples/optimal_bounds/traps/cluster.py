@@ -118,10 +118,39 @@ V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 
 
 N, L = 4, 3
-perms = [[0, 1, 2, 3], [1, 2, 3, 0], [0, 2, 1, 3]]
-all_bonds = bonds_from_perms(perms)
-ts = np.logspace(-2, 2, 50)
+perms = [[0, 1, 2, 3],  [1, 2, 3, 0], [0, 1, 2, 3]]
+all_bonds = bonds_from_perms([[0, 1, 2, 3],  [1, 2, 3, 0]])
+#ts = np.logspace(-1, 1, 10)
+ts = [3]
+num_hams = 1
 
+
+for __ in range(num_hams):
+    hamil = build_H(N, all_bonds, norm=1)
+    hamil /= np.linalg.norm(hamil.todense(), ord=2)
+    print('Target H norm: ', np.linalg.norm(hamil.todense(), ord=2))
+
+    for t in ts:
+        U = scipy.linalg.expm(-1j*t*hamil.todense())
+        for _ in range(200):
+            while True:
+                Vlist_reduced = [V(t*4/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
+                G0 = ansatz(Vlist_reduced, N, perms)
+                if np.abs(np.linalg.norm(scipy.linalg.logm(G0) , 2)/t-1)<1e-2:
+                    break
+            print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2)/t)
+
+
+            Vlist_trap, f_iter, err_iter = optimize(N, U, 
+                        len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
+
+            with open(f"./logs/Ham{__}_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
+                file.write(f"{err_iter[-1]} \n")
+
+
+
+"""
+# Parallelized Execution
 
 # module globals
 _G = {}
@@ -131,16 +160,20 @@ def _init_worker(N, perms, L):
     _G["L"] = L
 def _run(t):
     hamil = build_H(N, all_bonds, norm=1)
+    print('Target H norm: ', np.linalg.norm(hamil, ord=2))
+
     U = scipy.linalg.expm(-1j*t*hamil.todense())
-    for _ in range(2000):
+    for _ in range(10):
         Vlist_reduced = [V(t*2/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
+        
+        G0 = ansatz(Vlist_reduced, N, perms)
+        print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2))
+
         Vlist_trap, f_iter, err_iter = optimize(N, U, 
                 len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
 
         with open(f"./logs/V2_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
           file.write(f"{err_iter[-1]} \n")
-
-
 nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
 ctx = get_context("fork")  # best on Linux HPC; if not available, remove
 with open(f"./_C_Plog.txt", "a") as file:
@@ -152,5 +185,6 @@ with ProcessPoolExecutor(
         initargs=(N, perms, L),
 ) as ex:
     ex.map(_run, ts)
+"""
 
 
