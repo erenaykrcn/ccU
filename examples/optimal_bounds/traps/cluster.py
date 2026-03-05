@@ -127,6 +127,45 @@ ts = np.logspace(-2, 2, 100)
 num_hams = 1
 
 
+# Parallelized Execution
+# module globals
+_G = {}
+def _init_worker(N, perms, L):
+    _G["N"] = N
+    _G["perms"] = perms
+    _G["L"] = L
+def _run(t):
+    hamil = build_H(N, all_bonds, norm=1)
+    hamil /= np.linalg.norm(hamil.todense(), ord=2)
+    print('Target H norm: ', np.linalg.norm(hamil.todense(), ord=2))
+
+    U = scipy.linalg.expm(-1j*t*hamil.todense())
+    for _ in range(1000):
+        while t>3.14:
+            Vlist_reduced = [V(t*4/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
+            G0 = ansatz(Vlist_reduced, N, perms)
+            if np.abs(np.linalg.norm(scipy.linalg.logm(G0) , 2)/t-1)<1e-4:
+                break
+        print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2)/t)
+
+        Vlist_trap, f_iter, err_iter = optimize(N, U, len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
+
+        with open(f"./logs/V3_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
+            file.write(f"{err_iter[-1]} \n")
+nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
+ctx = get_context("fork")  # best on Linux HPC; if not available, remove
+with open(f"./_C_Plog.txt", "a") as file:
+    file.write(f"Workers: {nproc}\n ")
+with ProcessPoolExecutor(
+        max_workers=nproc,
+        mp_context=ctx,
+        initializer=_init_worker,
+        initargs=(N, perms, L),
+) as ex:
+    ex.map(_run, ts)
+
+
+"""
 for __ in range(num_hams):
     hamil = build_H(N, all_bonds, norm=1)
     hamil /= np.linalg.norm(hamil.todense(), ord=2)
@@ -149,49 +188,6 @@ for __ in range(num_hams):
                         len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
 
             with open(f"./logs/Ham{__}_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
-                file.write(f"{err_iter[-1]} \n")
-
-
-
+                file.write(f"{err_iter[-1]}")
 """
-# Parallelized Execution
-
-# module globals
-_G = {}
-def _init_worker(N, perms, L):
-    _G["N"] = N
-    _G["perms"] = perms
-    _G["L"] = L
-def _run(t):
-    hamil = build_H(N, all_bonds, norm=1)
-    hamil /= np.linalg.norm(hamil.todense(), ord=2)
-    print('Target H norm: ', np.linalg.norm(hamil.todense(), ord=2))
-
-    U = scipy.linalg.expm(-1j*t*hamil.todense())
-    for _ in range(1000):
-            while t>3.14:
-                Vlist_reduced = [V(t*4/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
-                G0 = ansatz(Vlist_reduced, N, perms)
-                if np.abs(np.linalg.norm(scipy.linalg.logm(G0) , 2)/t-1)<1e-4:
-                    break
-            print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2)/t)
-
-        Vlist_trap, f_iter, err_iter = optimize(N, U, 
-                len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
-
-        with open(f"./logs/V3_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
-          file.write(f"{err_iter[-1]} \n")
-nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
-ctx = get_context("fork")  # best on Linux HPC; if not available, remove
-with open(f"./_C_Plog.txt", "a") as file:
-    file.write(f"Workers: {nproc}\n ")
-with ProcessPoolExecutor(
-        max_workers=nproc,
-        mp_context=ctx,
-        initializer=_init_worker,
-        initargs=(N, perms, L),
-) as ex:
-    ex.map(_run, ts)
-"""
-
 
