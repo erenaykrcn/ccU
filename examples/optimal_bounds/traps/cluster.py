@@ -120,8 +120,8 @@ def build_H(L, bonds, Hloc=None, norm=1):
 V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 
 
-N, L = 4, 2
-perms = [[0, 1, 2, 3],  [1, 2, 3, 0]]
+N, L = 4, 3
+perms = [[0, 1, 2, 3],  [1, 2, 3, 0], [0, 2, 1, 3]]
 all_bonds = bonds_from_perms([[0, 1, 2, 3],  [1, 2, 3, 0]])
 ts = np.logspace(-2, 2, 100)
 num_hams = 1
