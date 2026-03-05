@@ -34,9 +34,12 @@ from concurrent.futures import ProcessPoolExecutor
 def random_hermitian(n, normalize=True):
     A = np.random.randn(n, n) + 1j * np.random.randn(n, n)
     H = (A + A.conj().T) / 2
-    evals = np.linalg.eigvalsh(H)
-    norm = np.max(np.abs(evals)) if normalize else 1
+    #evals = np.linalg.eigvalsh(H)
+    #norm = np.max(np.abs(evals)) if normalize else 1
+    norm = np.linalg.norm(H, ord=2)
+
     return H / norm
+
 
 
 def bonds_from_perms(perms):
@@ -120,8 +123,7 @@ V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 N, L = 4, 2
 perms = [[0, 1, 2, 3],  [1, 2, 3, 0]]
 all_bonds = bonds_from_perms([[0, 1, 2, 3],  [1, 2, 3, 0]])
-#ts = np.logspace(-1, 1, 10)
-ts = [3]
+ts = np.logspace(-2, 2, 100)
 num_hams = 1
 
 
@@ -134,7 +136,9 @@ for __ in range(num_hams):
         U = scipy.linalg.expm(-1j*t*hamil.todense())
         for _ in range(200):
             while True:
-                Vlist_reduced = [V(t*4/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
+                Vlist_reduced = [V(
+                    t*4/(N*L
+                )) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
                 G0 = ansatz(Vlist_reduced, N, perms)
                 if np.abs(np.linalg.norm(scipy.linalg.logm(G0) , 2)/t-1)<1e-4:
                     break
@@ -160,19 +164,22 @@ def _init_worker(N, perms, L):
     _G["L"] = L
 def _run(t):
     hamil = build_H(N, all_bonds, norm=1)
-    print('Target H norm: ', np.linalg.norm(hamil, ord=2))
+    hamil /= np.linalg.norm(hamil.todense(), ord=2)
+    print('Target H norm: ', np.linalg.norm(hamil.todense(), ord=2))
 
     U = scipy.linalg.expm(-1j*t*hamil.todense())
-    for _ in range(10):
-        Vlist_reduced = [V(t*2/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
-        
-        G0 = ansatz(Vlist_reduced, N, perms)
-        print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2))
+    for _ in range(1000):
+            while t>3.14:
+                Vlist_reduced = [V(t*4/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
+                G0 = ansatz(Vlist_reduced, N, perms)
+                if np.abs(np.linalg.norm(scipy.linalg.logm(G0) , 2)/t-1)<1e-4:
+                    break
+            print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2)/t)
 
         Vlist_trap, f_iter, err_iter = optimize(N, U, 
                 len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
 
-        with open(f"./logs/V2_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
+        with open(f"./logs/V3_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
           file.write(f"{err_iter[-1]} \n")
 nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
 ctx = get_context("fork")  # best on Linux HPC; if not available, remove
