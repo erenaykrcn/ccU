@@ -123,7 +123,7 @@ V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 N, L = 4, 3
 perms = [[0, 1, 2, 3],  [1, 2, 3, 0], [0, 2, 1, 3]]
 all_bonds = bonds_from_perms([[0, 1, 2, 3],  [1, 2, 3, 0], [0, 2, 1, 3]])
-ts = np.logspace(-2, 2, 100)
+ts = np.logspace(-1, 1, 100)
 num_hams = 1
 
 
@@ -141,12 +141,12 @@ def _run(t):
 
     U = scipy.linalg.expm(-1j*t*hamil.todense())
     for _ in range(1000):
-        while t>3.14:
-            Vlist_reduced = [V(t*4/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
+        while True:
+            Vlist_reduced = [V(t*2/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
             G0 = ansatz(Vlist_reduced, N, perms)
-            if np.abs(np.linalg.norm(scipy.linalg.logm(G0) , 2)/t-1)<1e-4:
+            print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2)/t)
+            if np.abs(np.linalg.norm(scipy.linalg.logm(G0) , 2)/t) < 1:
                 break
-        print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2)/t)
 
         Vlist_trap, f_iter, err_iter = optimize(N, U, len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
 
