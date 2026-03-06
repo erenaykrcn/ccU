@@ -120,10 +120,10 @@ def build_H(L, bonds, Hloc=None, norm=1):
 V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 
 
-N, L = 4, 3
-perms = [[0, 1, 2, 3],  [1, 2, 3, 0], [0, 2, 1, 3]]
-all_bonds = bonds_from_perms([[0, 1, 2, 3],  [1, 2, 3, 0], [0, 2, 1, 3]])
-ts = np.logspace(-1, 1, 100)
+N, L = 6, 5
+perms = [[0, 1, 2, 3] if i%2==0 else [1, 2, 3, 0] for i in range(L)]
+all_bonds = bonds_from_perms([[0, 1, 2, 3],  [1, 2, 3, 0]])
+ts = np.linspace(3.1, 3.2, 20)
 num_hams = 1
 
 
@@ -140,7 +140,7 @@ def _run(t):
     print('Target H norm: ', np.linalg.norm(hamil.todense(), ord=2))
 
     U = scipy.linalg.expm(-1j*t*hamil.todense())
-    for _ in range(1000):
+    for _ in range(100):
         while True:
             Vlist_reduced = [V(t*2/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
             G0 = ansatz(Vlist_reduced, N, perms)
