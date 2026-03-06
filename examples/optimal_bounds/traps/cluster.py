@@ -120,10 +120,10 @@ def build_H(L, bonds, Hloc=None, norm=1):
 V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 
 
-N, L = 6, 5
-perms = [[0, 1, 2, 3] if i%2==0 else [1, 2, 3, 0] for i in range(L)]
-all_bonds = bonds_from_perms([[0, 1, 2, 3],  [1, 2, 3, 0]])
-ts = np.linspace(3.1, 3.2, 20)
+N, L = 4, 2
+perms = [list(range(N)) if i%2==0 else list(range(1, N))+[0] for i in range(L)]
+all_bonds = bonds_from_perms([list(range(N)),  list(range(1, N))+[0]])
+ts = np.linspace(3.1, 3.3, 10)
 num_hams = 1
 
 
@@ -140,17 +140,17 @@ def _run(t):
     print('Target H norm: ', np.linalg.norm(hamil.todense(), ord=2))
 
     U = scipy.linalg.expm(-1j*t*hamil.todense())
-    for _ in range(100):
+    for _ in range(2000):
         while True:
-            Vlist_reduced = [V(t*2/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
+            Vlist_reduced = [V(t*8/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
             G0 = ansatz(Vlist_reduced, N, perms)
             print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2)/t)
-            if np.abs(np.linalg.norm(scipy.linalg.logm(G0) , 2)/t) < 1:
+            if np.abs(np.linalg.norm(scipy.linalg.logm(G0) , 2)/t-1) < (1e-4 if t<3.14 else 1e-1):
                 break
 
         Vlist_trap, f_iter, err_iter = optimize(N, U, len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
 
-        with open(f"./logs/V3_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
+        with open(f"./logs/V10_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
             file.write(f"{err_iter[-1]} \n")
 nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
 ctx = get_context("fork")  # best on Linux HPC; if not available, remove
