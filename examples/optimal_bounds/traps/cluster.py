@@ -140,7 +140,7 @@ def _run(t):
     hamil /= np.linalg.norm(hamil.todense(), ord=2)
     print('Target H norm: ', np.linalg.norm(hamil.todense(), ord=2))
     U = scipy.linalg.expm(-1j*t*hamil.todense())
-    for _ in range(1):
+    for _ in range(10000):
         while True:
             Vlist_reduced = [V(t*2/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
             G0 = ansatz(Vlist_reduced, N, perms)
@@ -149,7 +149,7 @@ def _run(t):
                 break
         Vlist_trap, f_iter, err_iter = optimize(N, U, len(Vlist_reduced), 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-12)
 
-        with open(f"./logs/V15_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
+        with open(f"./logs/V16_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
             file.write(f"{err_iter[-1]} \n")
 nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
 ctx = get_context("fork")  # best on Linux HPC; if not available, remove
