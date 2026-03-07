@@ -127,7 +127,7 @@ perms = [[0, 1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 0], [0, 3, 1, 4, 2, 5]]
 #, [0, 3, 1, 4, 2, 5], [1, 3, 2, 4, 0, 5]
 
 all_bonds = bonds_from_perms(perms)
-ts = np.logspace(-1, 2, 30)
+ts = np.linspace(3, 3.5, 30)
 num_hams = 1
 
 
@@ -153,7 +153,7 @@ def _run(t):
         Vlist_trap, f_iter, err_iter = optimize(N, U, len(Vlist_reduced), 
             1, Vlist_reduced, perms, niter=3000, conv_tol=1e-15)
 
-        with open(f"./logs/_V1_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
+        with open(f"./logs/_V2_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
             file.write(f"{err_iter[-1]} \n")
 nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
 ctx = get_context("fork")  # best on Linux HPC; if not available, remove
