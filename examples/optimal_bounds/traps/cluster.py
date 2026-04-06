@@ -120,8 +120,8 @@ def build_H(L, bonds, Hloc=None, norm=1):
 V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 
 N, L = 4, 2
-perms = [list(range(N)) if i%2==0 else list(range(1, N))+[0] for i in range(2)]
-all_bonds = bonds_from_perms(perms)
+perms = [list(range(N)) if i%2==0 else list(range(1, N))+[0] for i in range(L)]
+all_bonds = bonds_from_perms([list(range(N)) if i%2==0 else list(range(1, N))+[0] for i in range(2)])
 ts = np.logspace(-1, 1, 30)
 
 # Parallelized Execution
