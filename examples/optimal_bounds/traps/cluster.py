@@ -120,17 +120,10 @@ def build_H(L, bonds, Hloc=None, norm=1):
 V = lambda t: scipy.linalg.expm(-1j*t*random_hermitian(4))
 
 N, L = 4, 2
-perms = [list(range(N)) if i%2==0 else list(range(1, N))+[0] for i in range(L)]
-#perms = [[0, 1, 2, 3], [1, 2, 3, 0], [0, 2, 1, 3]]
-#perms = [[0, 1, 2, 3, 4, 5], [1, 2, 3, 4, 5, 0], [0, 3, 1, 4, 2, 5]]
-#, [0, 3, 1, 4, 2, 5], [1, 3, 2, 4, 0, 5]
-
+perms = [list(range(N)) if i%2==0 else list(range(1, N))+[0] for i in range(2)]
 all_bonds = bonds_from_perms(perms)
-#ts = np.linspace(3, 3.5, 30)
-num_hams = 10
+ts = np.logspace(-1, 1, 30)
 
-
-"""
 # Parallelized Execution
 # module globals
 _G = {}
@@ -153,7 +146,7 @@ def _run(t):
         Vlist_trap, f_iter, err_iter = optimize(N, U, len(Vlist_reduced), 
             1, Vlist_reduced, perms, niter=3000, conv_tol=1e-15)
 
-        with open(f"./logs/_V2_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
+        with open(f"./logs/_V3_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
             file.write(f"{err_iter[-1]} \n")
 nproc = int(os.environ.get("SLURM_CPUS_PER_TASK", "1"))
 ctx = get_context("fork")  # best on Linux HPC; if not available, remove
@@ -166,23 +159,25 @@ with ProcessPoolExecutor(
         initargs=(N, perms, L),
 ) as ex:
     ex.map(_run, ts)
-"""
 
-ts = [2.9]
-for n in range(num_hams):
+
+"""for n in range(num_hams):
     for t in ts:
         hamil = build_H(N, all_bonds, norm=1)
         hamil /= np.linalg.norm(hamil.todense(), ord=2)
         print('Target H norm: ', np.linalg.norm(hamil.todense(), ord=2))
 
         U = scipy.linalg.expm(-1j*t*hamil.todense())
-        for _ in range(50):
-            while True:
-                Vlist_reduced = [V(t*4/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
-                G0 = ansatz(Vlist_reduced, N, perms)
-                print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2)/t)
-                if np.abs(np.linalg.norm(scipy.linalg.logm(G0) , 2)/t - 1) < 1e-4:
-                    break
+        for _ in range(200):
+            Vlist_reduced = [V(1e-2) for i in range(L)]
+            G0 = ansatz(Vlist_reduced, N, perms)
+            print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2)/t)
+            #while True:
+            #    Vlist_reduced = [V(t*4/(N*L)) for i in range(L)] # 2/(N*L) factor makes sure |H_{init}| = 1.
+            #    G0 = ansatz(Vlist_reduced, N, perms)
+            #    print("H0 norm: ", np.linalg.norm(scipy.linalg.logm(G0) , 2)/t)
+            #    if np.abs(np.linalg.norm(scipy.linalg.logm(G0) , 2)/t - 1) < 1e-4:
+            #        break
             Vlist_trap, f_iter, err_iter = optimize(N, U, len(Vlist_reduced), 
                 1, Vlist_reduced, perms, niter=3000, conv_tol=1e-15)
 
@@ -190,6 +185,6 @@ for n in range(num_hams):
                 file.write(f"{err_iter[-1]} \n")
 
         with open(f"./logs/Hams_ConvGuar_log_L{L}_N{N}_t{t}.txt", "a") as file:
-            file.write(f"\n \n")
+            file.write(f"")"""
 
 
