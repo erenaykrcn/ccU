@@ -243,13 +243,13 @@ epss = np.linspace(0, 1, 30)
 for eps in epss:
     psi_t, psi_s = run_single_example(eps, 0)
     with open(f"./logs/epss.txt", "a") as file:
-        file.write(f"eps={eps}, ({psi_final[1]: .8f}, {psi_final[5]: .8f}) \n")
+        file.write(f"eps={eps}, ({psi_t: .8f}, {psi_s: .8f}) \n")
 
 
 Us = np.linspace(0, 10, 30)
 for U in Us:
     psi_t, psi_s = run_single_example(0, U)
     with open(f"./logs/Us.txt", "a") as file:
-        file.write(f"U={U}, ({psi_final[1]: .8f}, {psi_final[5]: .8f}) \n")
+        file.write(f"U={U}, ({psi_t: .8f}, {psi_s: .8f}) \n")
 
 
