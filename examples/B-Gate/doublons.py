@@ -97,13 +97,13 @@ def main():
     tbar    = 1.0
     delta_i = -30.0 * tbar
     delta_f = +30.0 * tbar
-    T       = 1.0 / tbar   # long enough to be adiabatic
+    T       = 1000.0 / tbar   # long enough to be adiabatic
 
     # --- 3. Scan U at fixed eps: check dynamical phase ---
     print("\n" + "=" * 55)
     print(f"3. Vary eps, U={0}")
     print("=" * 55)
-    epss = np.linspace(0.025, 0.175, 1)
+    epss = np.linspace(0.025, 0.175, 41)
 
     phase_t0 = []
     phase_s  = []
