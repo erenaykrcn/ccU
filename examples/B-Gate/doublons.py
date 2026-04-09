@@ -103,39 +103,27 @@ def main():
     print("\n" + "=" * 55)
     print(f"3. Vary eps, U={0}")
     print("=" * 55)
-    epss = np.linspace(0.025, 0.175, 41)
+    epss = np.linspace(0.01, 0.03, 31 )
 
-    phase_t0 = []
-    phase_s  = []
+    phase_t0 = {}
+    phase_s  = {}
 
-    phase_cross = []
-    amp_cross = []
-    for eps in epss:
-        tup, tdown = tbar+eps, tbar-eps
-        tp, tm = tup+tdown, tup-tdown
-        _, U_log = compute_propagator(T, delta_i, delta_f, tp, tm, U=Uval)
-        phase_t0.append(np.angle(U_log[0, 0]))
-        phase_s.append(np.angle(U_log[1, 1]))
+    phase_cross = {}
+    amp_cross = {}
+    Us = np.linspace(0, 0.5, 31)
+    for U in Us:
+        for eps in epss:
+            tup, tdown = tbar+eps, tbar-eps
+            tp, tm = tup+tdown, tup-tdown
+            _, U_log = compute_propagator(T, delta_i, delta_f, tp, tm, U=U)
+            phase_t0[str(U)+ ', '+ str(eps)] = np.angle(U_log[0, 0])/np.pi
+            phase_s[str(U)+ ', '+ str(eps)]  = np.angle(U_log[1, 1])/np.pi
 
-        phase_cross.append(np.angle(U_log[0, 1]))
-        amp_cross.append(np.abs(U_log[0, 1]))
+            phase_cross[str(U)+ ', '+ str(eps)]  = np.angle(U_log[0, 1])/np.pi
+            amp_cross[str(U)+ ', '+ str(eps)]  = np.abs(U_log[0, 1])
 
 
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(epss/tbar, np.array(phase_t0)/np.pi, 'o-', label=r"$\arg\langle t_0|U|t_0\rangle/\pi$")
-    ax.plot(epss/tbar, np.array(phase_s)/np.pi,  's-', label=r"$\arg\langle s|U|s\rangle/\pi$")
-    
-    ax.plot(epss/tbar, np.array(amp_cross), label=r"$ |\langle t_0|U|s\rangle |$")
-    ax.plot(epss/tbar, np.array(phase_cross)/np.pi,  label=r"$ \arg \langle t0|U|s\rangle /\pi$")
-    
-    ax.set_xlabel(r"$U/\bar{t}$")
-    ax.set_ylabel(r"phase / $\pi$")
-    ax.set_title(rf"Diagonal phases vs $U$, $\epsilon={eps}$, $T={T:.0f}/\bar{{t}}$")
-    ax.legend()
-    plt.tight_layout()
-    plt.show()
-    return np.array(phase_t0)/np.pi, np.array(phase_s)/np.pi, np.array(amp_cross), np.array(phase_cross)/np.pi
-
+    return phase_t0, phase_s, amp_cross, phase_cross
 
 
 def print_complex_matrix(M):
@@ -150,8 +138,8 @@ import json
 
 phase_t0, phase_s, amp_cross, phase_cross = main()
 data = {
-    'phase_t0': phase_t0.tolist(), 'phase_s': phase_s.tolist(), 'amp_cross': amp_cross.tolist(), 
-    'phase_cross': phase_cross.tolist()
+    'phase_t0': phase_t0, 'phase_s': phase_s, 'amp_cross': amp_cross, 
+    'phase_cross': phase_cross
 }
-with open(f"./logs/U0_epss_0.025-0.175_T1000_n21.json", "w") as f:
+with open(f"./logs/U0_epss_T1000_n21.json", "w") as f:
     json.dump(data, f)
