@@ -100,28 +100,35 @@ def main():
     T       = 1000.0 / tbar   # long enough to be adiabatic
 
     # --- 3. Scan U at fixed eps: check dynamical phase ---
-    print("\n" + "=" * 55)
-    print(f"3. Vary eps, U={0}")
-    print("=" * 55)
-    epss = np.linspace(0.01, 0.03, 31 )
+    #print("\n" + "=" * 55)
+    #print(f"3. Vary eps, U={0}")
+    #print("=" * 55)
+    #epss = np.linspace(0.01, 0.025, 31 )
 
     phase_t0 = {}
     phase_s  = {}
 
     phase_cross = {}
     amp_cross = {}
-    Us = np.linspace(0, 0.5, 31)
-    for U in Us:
-        for eps in epss:
-            tup, tdown = tbar+eps, tbar-eps
-            tp, tm = tup+tdown, tup-tdown
-            _, U_log = compute_propagator(T, delta_i, delta_f, tp, tm, U=U)
-            phase_t0[str(U)+ ', '+ str(eps)] = np.angle(U_log[0, 0])/np.pi
-            phase_s[str(U)+ ', '+ str(eps)]  = np.angle(U_log[1, 1])/np.pi
+    #Us = np.linspace(0, 0.2, 31)
+    #for U in Us:
+    #    for eps in epss:
+    import numpy as np
 
-            phase_cross[str(U)+ ', '+ str(eps)]  = np.angle(U_log[0, 1])/np.pi
-            amp_cross[str(U)+ ', '+ str(eps)]  = np.abs(U_log[0, 1])
+    pts = np.loadtxt(f"sector_1_dense_line.txt")
 
+    U_dense = pts[:, 0]
+    eps_dense = pts[:, 1]
+    for U, eps in zip(U_dense, eps_dense):
+        print(U, eps)
+        tup, tdown = tbar+eps, tbar-eps
+        tp, tm = tup+tdown, tup-tdown
+        _, U_log = compute_propagator(T, delta_i, delta_f, tp, tm, U=U)
+        phase_t0[str(U)+ ', '+ str(eps)] = np.angle(U_log[0, 0])/np.pi
+        phase_s[str(U)+ ', '+ str(eps)]  = np.angle(U_log[1, 1])/np.pi
+
+        phase_cross[str(U)+ ', '+ str(eps)]  = np.angle(U_log[0, 1])/np.pi
+        amp_cross[str(U)+ ', '+ str(eps)]  = np.abs(U_log[0, 1])
 
     return phase_t0, phase_s, amp_cross, phase_cross
 
@@ -141,5 +148,5 @@ data = {
     'phase_t0': phase_t0, 'phase_s': phase_s, 'amp_cross': amp_cross, 
     'phase_cross': phase_cross
 }
-with open(f"./logs/U0_epss_T1000_n21.json", "w") as f:
+with open(f"./logs/U0_epss_T1000_n21_DENSE.json", "w") as f:
     json.dump(data, f)
