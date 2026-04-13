@@ -103,32 +103,32 @@ def main():
     #print("\n" + "=" * 55)
     #print(f"3. Vary eps, U={0}")
     #print("=" * 55)
-    #epss = np.linspace(0.01, 0.025, 31 )
+    
 
     phase_t0 = {}
     phase_s  = {}
-
     phase_cross = {}
     amp_cross = {}
-    #Us = np.linspace(0, 0.2, 31)
-    #for U in Us:
-    #    for eps in epss:
-    import numpy as np
+    epss = np.linspace(0.02133-0.005, 0.02133+0.005, 21)
+    Us = np.linspace(0.0667-0.005, 0.0667+0.005, 21)
+    for U in Us:
+        for eps in epss:
+            print(U, eps)
+            tup, tdown = tbar+eps, tbar-eps
+            tp, tm = tup+tdown, tup-tdown
+            _, U_log = compute_propagator(T, delta_i, delta_f, tp, tm, U=U)
+            phase_t0[str(U)+ ', '+ str(eps)] = np.angle(U_log[0, 0])/np.pi
+            phase_s[str(U)+ ', '+ str(eps)]  = np.angle(U_log[1, 1])/np.pi
 
-    pts = np.loadtxt(f"sector_1_dense_line.txt")
+            phase_cross[str(U)+ ', '+ str(eps)]  = np.angle(U_log[0, 1])/np.pi
+            amp_cross[str(U)+ ', '+ str(eps)]  = np.abs(U_log[0, 1])
 
-    U_dense = pts[:, 0]
-    eps_dense = pts[:, 1]
-    for U, eps in zip(U_dense, eps_dense):
-        print(U, eps)
-        tup, tdown = tbar+eps, tbar-eps
-        tp, tm = tup+tdown, tup-tdown
-        _, U_log = compute_propagator(T, delta_i, delta_f, tp, tm, U=U)
-        phase_t0[str(U)+ ', '+ str(eps)] = np.angle(U_log[0, 0])/np.pi
-        phase_s[str(U)+ ', '+ str(eps)]  = np.angle(U_log[1, 1])/np.pi
-
-        phase_cross[str(U)+ ', '+ str(eps)]  = np.angle(U_log[0, 1])/np.pi
-        amp_cross[str(U)+ ', '+ str(eps)]  = np.abs(U_log[0, 1])
+    #pts = np.loadtxt(f"sector_1_dense_line.txt")
+    #U_dense = pts[:, 0]
+    #eps_dense = pts[:, 1]
+    #data = np.loadtxt("eps_U_pairs.txt")
+    #eps_dense = data[:, 0]
+    #U_dense   = data[:, 1]
 
     return phase_t0, phase_s, amp_cross, phase_cross
 
